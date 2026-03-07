@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
+    <RootNamespace>Samwin.UmlautConverterLib.Tests</RootNamespace>
   </PropertyGroup>
+
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
