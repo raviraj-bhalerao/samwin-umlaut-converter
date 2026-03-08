@@ -20,10 +20,10 @@ jobs:
         dotnet-version: '10.0.x' # or the version you are using
 
     - name: Restore dependencies
-      run: dotnet restore src/UmlautConverter.sln
+      run: dotnet restore src/Samwin.UmlautConverter.sln
 
     - name: Build
-      run: dotnet build src/UmlautConverter.sln --configuration Release --no-restore
+      run: dotnet build src/Samwin.UmlautConverter.sln --configuration Release --no-restore
 
     - name: Run tests
-      run: dotnet test src/UmlautConverter.Tests/UmlautConverter.Tests.csproj --no-build --verbosity normal
+      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverter.Tests.csproj --no-build --verbosity normal

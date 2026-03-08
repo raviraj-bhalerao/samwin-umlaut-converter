@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Samwin.UmlautConverterLib\Samwin.UmlautConverterLib.csproj" />
+    <ProjectReference Include="..\Samwin.UmlautConverterLib\Samwin.UmlautConverterLib.Tests.csproj" />
   </ItemGroup>
 
 </Project>
