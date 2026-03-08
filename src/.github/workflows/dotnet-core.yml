@@ -1,0 +1,29 @@
+name: .NET Build & Test
+
+on:
+  push:
+    branches: [ core ]
+  pull_request:
+    branches: [ core ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '10.0.x' # or the version you are using
+
+    - name: Restore dependencies
+      run: dotnet restore src/UmlautConverter.sln
+
+    - name: Build
+      run: dotnet build src/UmlautConverter.sln --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test src/UmlautConverter.Tests/UmlautConverter.Tests.csproj --no-build --verbosity normal

@@ -22,27 +22,23 @@ The project was designed for the **Samwin technical assignment**, with a focus o
 
 ```
 samwin-umlaut-converter/
-
-src/
-├─ Samwin.UmlautConverterLib/
-│   ├─ Step1/
-│   │   Umlaut converter implementations
-│   │
-│   ├─ Step2/
-│   │   Variation generator implementations
-│   │
-│   ├─ Step3/
-│   │   SQL generation utilities
-│   │
-│   └─ Exceptions/
-│       Custom exception types
 │
-└─ Samwin.UmlautConverterLib.Tests/
-    Unit tests validating all functionality
-
-Dockerfile
-README.md
-LICENSE
+├── src/
+│   ├── UmlautConverter
+│   │   Core library containing the converter implementations.
+│   │
+│   ├── UmlautConverter.Tests
+│   │   Unit tests verifying correctness of all converters.
+│   │
+│   ├── UmlautConverter.Benchmarks
+│   │   BenchmarkDotNet benchmarks used to compare performance and memory usage.
+│   │
+│   ├── UmlautConverter.Console
+│   │   Example console application demonstrating how to use the converters.
+│   │
+├── README.md
+│   Project overview and usage instructions.
+│
 ```
 
 ---
