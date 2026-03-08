@@ -1,18 +1,23 @@
 ﻿using System;
+using System.Linq;
 using Samwin.UmlautConverterLib;
 using Samwin.UmlautConverterLib.Step1;
+using Samwin.UmlautConverterLib.Step2;
 
 class Program
 {
     static void Main()
     {
+
+        var variationCoverter = new BitmaskEfficientVariationYieldGenerator();
+        var result = variationCoverter.Generate("One Two Three Four").ToList();
         Console.WriteLine("Samwin Umlaut Converter - Sample Client\n");
 
         string[] inputs = { "Mueller", "Schroeder", "Aesch", "Oesterreich" };
 
-        var simpleConverter = new UmlautSimpleConverter();
-        var bufferConverter = new UmlautEfficientConverter();
-        var ultraFastConverter = new UmlautMemoryOptimizedConverter();
+        IUmlautConverter simpleConverter = new UmlautSimpleConverter();
+        IUmlautConverter bufferConverter = new UmlautStackAllocConverter();
+        IUmlautConverter ultraFastConverter = new UmlautStringCreateConverter();
 
         foreach (var input in inputs)
         {

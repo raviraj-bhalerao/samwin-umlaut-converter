@@ -1,8 +1,9 @@
 using System;
 
-namespace Samwin.UmlautConverterLib;
-
-public class SqlGenerator
+namespace Samwin.UmlautConverterLib
 {
+    public class SqlGenerator
+    {
 
+    }
 }
