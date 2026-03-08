@@ -2,8 +2,6 @@ name: Samwin UmlautConverter Benchmarks
 
 on:
   workflow_dispatch:  # allows manual trigger from GitHub UI
-  push:
-    branches: [ core ] # temporarily added to force GitHub to index the workflow
 
 jobs:
   benchmarks:
