@@ -26,4 +26,4 @@ jobs:
       run: dotnet build src/Samwin.UmlautConverter.sln --configuration Release --no-restore
 
     - name: Run tests
-      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj --no-build --verbosity normal
+      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj --no-build --configuration Release --framework net10.0 --verbosity normal
