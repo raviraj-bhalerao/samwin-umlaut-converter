@@ -1,4 +1,4 @@
-name: Samwin-UmlautConverter Benchmarks
+name: Samwin UmlautConverter Benchmarks
 
 on:
   workflow_dispatch:  # allows manual trigger from GitHub UI
