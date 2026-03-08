@@ -1,0 +1,26 @@
+name: Samwin-UmlautConverter Benchmarks
+
+on:
+  workflow_dispatch:  # allows manual trigger from GitHub UI
+
+jobs:
+  benchmarks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore src/Samwin.UmlautConverter.sln
+
+    - name: Build
+      run: dotnet build src/Samwin.UmlautConverter.sln --configuration Release --no-restore
+
+    - name: Run Benchmarks
+      run: dotnet run -c Release -p src/Samwin.UmlautConverter.Benchmarks/Samwin.UmlautConverter.Benchmarks.csproj

@@ -101,6 +101,17 @@ Detailed benchmark results are documented in the **Step1 documentation**.
 
 ---
 
+# Running Benchmarks
+
+Benchmarks can be executed manually via GitHub Actions:
+
+1. Go to the **Actions** tab in the repository.  
+2. Select the **Samwin-UmlautConverter Benchmarks** workflow.  
+3. Click **Run workflow** → select the `core` branch → **Run workflow**.  
+4. The workflow will build the project and execute all BenchmarkDotNet benchmarks.  
+
+Results are available in the workflow logs.
+
 # Design Goals
 
 This project demonstrates several engineering concepts:

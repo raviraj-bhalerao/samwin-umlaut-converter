@@ -1,4 +1,4 @@
-name: .NET Build & Test
+name: Samwin-UmlautConverter Build & Test
 
 on:
   push:
