@@ -114,15 +114,22 @@ namespace Samwin.UmlautConverterLib.Step2.Tests
             string multiWordInput = "One Two Three Four"; // 4 words, maxWords = 3
             Assert.Throws<ArgumentException>(() => generator.Generate(multiWordInput).ToList());
         }
-                [Theory]
+        [Theory]
         [MemberData(nameof(Generators))]
         public void Converter_Output(IVariationGenerator converter)
         {
-            Console.WriteLine($"This test method '{nameof(VariationGeneratorContractTests)}.{nameof(Converter_Output)}' for {converter.GetType().FullName} is used to output the converted variations for manual inspection. It does not contain assertions.");
-            var result = converter.Generate("KOESTNER").First();
-            Console.WriteLine($"Input: KOESTNER, Output: {string.Join(", ", result)}");
-            result = converter.Generate("RUESSWURM").First();
-            Console.WriteLine($"Input: RUESSWURM, Output: {string.Join(", ", result)}");
+            Console.WriteLine($"::group::{converter.GetType().Name}.SQLs in {nameof(VariationGeneratorContractTests)}.{nameof(Converter_Output)}");
+            try
+            {
+                var result = converter.Generate("KOESTNER").First();
+                Console.WriteLine($"Input: KOESTNER, Output: {string.Join(", ", result)}");
+                result = converter.Generate("RUESSWURM").First();
+                Console.WriteLine($"Input: RUESSWURM, Output: {string.Join(", ", result)}");
+            }
+            finally
+            {
+                Console.WriteLine("::endgroup::");
+            }
         }
     }
 }

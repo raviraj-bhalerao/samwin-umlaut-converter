@@ -112,56 +112,63 @@ namespace Samwin.UmlautConverterLib.Step3.Tests
         [MemberData(nameof(Generators))]
         public void SqlGenerator_GeneratesOutput(object generatorObj, IVariationGenerator variationGenerator)
         {
-            Console.WriteLine($"This test method '{nameof(SqlGeneratorContractTests)}.{nameof(SqlGenerator_GeneratesOutput)}' for {generatorObj.GetType().FullName} outputs the generated SQL by for manual inspection. It does not contain assertions.");
-            dynamic generator = generatorObj;
-            var names = new[] { "KOESTNER", "RUESSWURM", "DUERMUELLER", "JAEAESKELAEINEN", "GROSSSCHAEDL" };
-
-            var results = Enumerable.ToList(generator.Generate(names, combineAll: true));
-            var first = results[0];
-
-            if (first is string combinedSql)
+            Console.WriteLine($"::group::{generatorObj.GetType().Name}.SQLs in {nameof(SqlGeneratorContractTests)}.{nameof(SqlGenerator_GeneratesOutput)}");
+            try
             {
-                Console.WriteLine("Generated combined plain SQL:\n" + combinedSql);
-            }
-            else if (first is SqlQuery query)
-            {
-                Console.WriteLine("Generated combined parameterised SQL:\n" + query.Sql);
-                var paramString = string.Join("|", query.Parameters.Select(p => $"{p.Key}:{p.Value}"));
-                Console.WriteLine("Parameters: " + paramString);
-            }
-            else
-            {
-                // This will now show the actual class name if it fails
-                throw new InvalidOperationException("Unknown result type: " + first.GetType().Name);
-            }
+                dynamic generator = generatorObj;
+                var names = new[] { "KOESTNER", "RUESSWURM", "DUERMUELLER", "JAEAESKELAEINEN", "GROSSSCHAEDL" };
 
-            results = Enumerable.ToList(generator.Generate(names, combineAll: false));
-            first = results[0];
+                var results = Enumerable.ToList(generator.Generate(names, combineAll: true));
+                var first = results[0];
 
-            if (first is string individualSql)
-            {
-                Console.WriteLine("Individual plain  SQLs:");
-                foreach (var sql in results)
+                if (first is string combinedSql)
                 {
-                    Console.WriteLine(sql);
+                    Console.WriteLine("Generated combined plain SQL:\n" + combinedSql);
                 }
-            }
-            else if (first is SqlQuery parameterisedQuery)
-            {
-                Console.WriteLine("Individual parameterised SQLs:");
-                foreach (SqlQuery query in results)
+                else if (first is SqlQuery query)
                 {
-                    Console.WriteLine("SQL:\n" + query.Sql);
+                    Console.WriteLine("Generated combined parameterised SQL:\n" + query.Sql);
                     var paramString = string.Join("|", query.Parameters.Select(p => $"{p.Key}:{p.Value}"));
                     Console.WriteLine("Parameters: " + paramString);
                 }
-            }
-            else
-            {
-                // This will now show the actual class name if it fails
-                throw new InvalidOperationException("Unknown result type: " + first.GetType().Name);
-            }
+                else
+                {
+                    // This will now show the actual class name if it fails
+                    throw new InvalidOperationException("Unknown result type: " + first.GetType().Name);
+                }
 
+                results = Enumerable.ToList(generator.Generate(names, combineAll: false));
+                first = results[0];
+
+                if (first is string individualSql)
+                {
+                    Console.WriteLine("Individual plain  SQLs:");
+                    foreach (var sql in results)
+                    {
+                        Console.WriteLine(sql);
+                    }
+                }
+                else if (first is SqlQuery parameterisedQuery)
+                {
+                    Console.WriteLine("Individual parameterised SQLs:");
+                    foreach (SqlQuery query in results)
+                    {
+                        Console.WriteLine("SQL:\n" + query.Sql);
+                        var paramString = string.Join("|", query.Parameters.Select(p => $"{p.Key}:{p.Value}"));
+                        Console.WriteLine("Parameters: " + paramString);
+                    }
+                }
+                else
+                {
+                    // This will now show the actual class name if it fails
+                    throw new InvalidOperationException("Unknown result type: " + first.GetType().Name);
+                }
+
+            }
+            finally
+            {
+                Console.WriteLine("::endgroup::");
+            }
 
 
         }

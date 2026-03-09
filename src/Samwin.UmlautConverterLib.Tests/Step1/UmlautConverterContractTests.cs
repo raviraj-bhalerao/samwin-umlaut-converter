@@ -89,11 +89,18 @@ namespace Samwin.UmlautConverterLib.Step1.Tests
         [MemberData(nameof(Generators))]
         public void Converter_Output(IUmlautConverter converter)
         {
-            Console.WriteLine($"This test method '{nameof(UmlautConverterContractTests)}.{nameof(Converter_Output)}'  for {converter.GetType().FullName} is used to output the converted text for manual inspection. It does not contain assertions.");
-            var result = converter.Convert("KOESTNER");
-            Console.WriteLine($"Input: KOESTNER, Output: {result}");
-            result = converter.Convert("RUESSWURM");
-            Console.WriteLine($"Input: RUESSWURM, Output: {result}");
+            Console.WriteLine($"::group::{converter.GetType().Name}.SQLs in {nameof(UmlautConverterContractTests)}.{nameof(Converter_Output)}");
+            try
+            {
+                var result = converter.Convert("KOESTNER");
+                Console.WriteLine($"Input: KOESTNER, Output: {result}");
+                result = converter.Convert("RUESSWURM");
+                Console.WriteLine($"Input: RUESSWURM, Output: {result}");
+            }
+            finally
+            {
+                Console.WriteLine("::endgroup::");
+            }
         }
     }
 }
