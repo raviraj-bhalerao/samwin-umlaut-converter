@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Samwin.UmlautConverterLib.Step1;
-using Xunit.Abstractions;
 
 namespace Samwin.UmlautConverterLib.Step1.Tests
 {
@@ -11,10 +9,11 @@ namespace Samwin.UmlautConverterLib.Step1.Tests
         public static IEnumerable<object[]> Generators()
         {
             yield return new object[] { new UmlautSimpleConverter() };
-            yield return new object[] { new UmlautStackAllocConverter() };
             yield return new object[] { new UmlautArrayConverter() };
-            yield return new object[] { new UmlautStringCreateConverter() };
+            yield return new object[] { new UmlautStackAllocConverter() };
+            yield return new object[] { new UmlautRentedHeapConverter() };
             yield return new object[] { new UmlautStackAllocOrRentedHeapConverter() };
+            yield return new object[] { new UmlautStringCreateConverter() };
         }
 
         [Theory]
