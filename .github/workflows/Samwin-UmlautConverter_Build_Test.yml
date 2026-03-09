@@ -26,7 +26,7 @@ jobs:
       run: dotnet build src/Samwin.UmlautConverter.sln --configuration Release --no-restore
 
     - name: Run tests with coverage
-      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj --configuration Release --framework net10.0 --collect:"XPlat Code Coverage"            
+      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj --configuration Release --framework net10.0 --collect:"XPlat Code Coverage" --verbosity normal
 
     - name: Restore .NET tools
       run: dotnet tool restore
