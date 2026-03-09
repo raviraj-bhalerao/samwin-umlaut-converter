@@ -26,19 +26,13 @@ jobs:
       run: dotnet build src/Samwin.UmlautConverter.sln --configuration Release --no-restore
 
     - name: Run tests with coverage
-      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj \
-            --configuration Release \
-            --framework net10.0 \
-            --collect:"XPlat Code Coverage"
+      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj --configuration Release --framework net10.0 --collect:"XPlat Code Coverage"            
 
     - name: Restore .NET tools
       run: dotnet tool restore
 
     - name: Generate HTML coverage report
-      run: dotnet tool run reportgenerator \
-            -reports:"src/**/coverage.cobertura.xml" \
-            -targetdir:"coverage-report" \
-            -reporttypes:Html
+      run: dotnet tool run reportgenerator -reports:"src/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Html
 
     - name: Upload coverage report
       uses: actions/upload-artifact@v4
@@ -49,9 +43,6 @@ jobs:
     - name: Display coverage summary in log
       run: |
         echo "##[group]Code Coverage Summary"
-        dotnet tool run reportgenerator \
-          -reports:coverage-report/coverage.cobertura.xml \
-          -targetdir:coverage-summary \
-          -reporttypes:TextSummary
+        dotnet tool run reportgenerator -reports:coverage-report/coverage.cobertura.xml -targetdir:coverage-summary -reporttypes:TextSummary
         cat coverage-summary/Summary.txt
         echo "##[endgroup]"
