@@ -29,20 +29,27 @@ The project was designed for the **Samwin technical assignment**, with a focus o
 samwin-umlaut-converter/
 │
 ├── src/
-│   ├── UmlautConverter
+│   ├── Samwin.UmlautConverterLib
 │   │   Core library containing the converter implementations.
 │   │
-│   ├── UmlautConverter.Tests
+│   ├── Samwin.UmlautConverterLib.Tests
 │   │   Unit tests verifying correctness of all converters.
 │   │
-│   ├── UmlautConverter.Benchmarks
+│   ├── Samwin.UmlautConverter.Benchmarks
 │   │   BenchmarkDotNet benchmarks used to compare performance and memory usage.
 │   │
-│   ├── UmlautConverter.Console
-│   │   Example console application demonstrating how to use the converters.
+│   ├── Samwin.UmlautConverter.Benchmarks
+│   │   BenchmarkDotNet benchmarks used to compare performance and memory usage.
 │   │
-├── README.md
-│   Project overview and usage instructions.
+│   └── dockerfile
+│       To build the containerised solution
+│    
+├── Samwin.UmlautConverter.sln
+│   Solution for all projects
+├── Samwin.UmlautConverter.sln
+│   Solution for all projects
+└── README.md
+    Project overview and usage instructions.
 
 ````
 
@@ -230,8 +237,8 @@ When running the unit tests in GitHub Actions, you can inspect the generated out
 ### How to view in GitHub Actions
 
 1. Navigate to the **Actions** tab in your repository.
-2. Select the workflow run you want to inspect (e.g., `Samwin-UmlautConverter Build & Test`).
-3. Expand the **job log**.
+2. Select the run you want to inspect of the workflow `Samwin UmlautConverter Build, Test & Coverage`.
+3. Expand the **job log** for task Run tests with coverage.
 4. Look for the collapsible sections starting with your `Output to inspect:`.
 
 * Click the triangle to expand and see the full output.

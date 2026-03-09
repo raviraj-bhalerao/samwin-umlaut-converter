@@ -22,8 +22,6 @@ namespace Samwin.UmlautConverterLib.Step2
     public class BitmaskEfficientVariationGenerator : VariationConverterBase, IVariationGenerator
     {
         private readonly UmlautMappingHelper _helper = new();
-        private readonly UmlautStackAllocConverter _converter = new();
-
         public IEnumerable<string> Generate(string input)
         {
             // Validate input first
