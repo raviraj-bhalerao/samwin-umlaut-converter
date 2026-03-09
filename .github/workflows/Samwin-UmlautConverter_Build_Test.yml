@@ -5,6 +5,7 @@ on:
     branches: [ core ]
   pull_request:
     branches: [ core ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,26 +27,28 @@ jobs:
       run: dotnet build src/Samwin.UmlautConverter.sln --configuration Release --no-restore
 
     - name: Run tests with coverage
-      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj --configuration Release --framework net10.0 --collect:"XPlat Code Coverage" --verbosity normal
+      run: |
+        mkdir -p coverage-report
+        dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj \
+          --configuration Release --framework net10.0 --collect:"XPlat Code Coverage" \
+          /p:CoverletOutput=coverage-report/coverage.cobertura.xml \
+          /p:CoverletOutputFormat=cobertura
 
     - name: Restore .NET tools
       run: dotnet tool restore
 
-    - name: Generate coverage report
-      run: |
-        dotnet tool run reportgenerator `
-        -reports:"**/coverage.cobertura.xml" `
-        -targetdir:"coverage-report" `
-        -reporttypes:Html
+    - name: Generate HTML coverage report
+      run: dotnet tool run reportgenerator -reports:coverage-report/coverage.cobertura.xml -targetdir:coverage-report/html -reporttypes:Html
 
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v3
+    - name: Upload coverage HTML report
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: coverage-report
+        path: coverage-report/html
 
-    - name: Display coverage summary in Actions
-      uses: tj-actions/coverage-report@v2
-      with:
-        path: '**/coverage.cobertura.xml'
-        reporter: cobertura
+    - name: Display coverage summary in log
+      run: |
+        echo "##[group]Code Coverage Summary"
+        dotnet tool run reportgenerator -reports:coverage-report/coverage.cobertura.xml -targetdir:coverage-summary -reporttypes:TextSummary
+        cat coverage-summary/Summary.txt
+        echo "##[endgroup]"
