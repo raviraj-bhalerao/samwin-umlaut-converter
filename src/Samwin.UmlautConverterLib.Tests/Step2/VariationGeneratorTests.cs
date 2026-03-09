@@ -2,11 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Samwin.UmlautConverterLib.Step2;
+using Xunit.Abstractions;
 
-namespace Samwin.UmlautConverterLib.Tests.Step2
+namespace Samwin.UmlautConverterLib.Step2.Tests
 {
+
     public class VariationGeneratorContractTests
     {
+        private readonly ITestOutputHelper _output;
+
+        public VariationGeneratorContractTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
         public static IEnumerable<object[]> Generators()
         {
             yield return new object[] { new SimpleGroundUpVariationGenerator() };
@@ -97,7 +105,7 @@ namespace Samwin.UmlautConverterLib.Tests.Step2
             Assert.NotNull(first);
         }
 
-                [Theory]
+        [Theory]
         [MemberData(nameof(Generators))]
         public void Input_ExceedsMaxLength_Throws(IVariationGenerator generator)
         {
@@ -111,6 +119,16 @@ namespace Samwin.UmlautConverterLib.Tests.Step2
         {
             string multiWordInput = "One Two Three Four"; // 4 words, maxWords = 3
             Assert.Throws<ArgumentException>(() => generator.Generate(multiWordInput).ToList());
+        }
+                [Theory]
+        [MemberData(nameof(Generators))]
+        public void Converter_Output(IVariationGenerator converter)
+        {
+            Console.WriteLine($"This test method '{nameof(VariationGeneratorContractTests)}.{nameof(Converter_Output)}' is used to output the converted variations for manual inspection. It does not contain assertions.");
+            var result = converter.Generate("KOESTNER").First();
+            Console.WriteLine($"Input: KOESTNER, Output: {string.Join(", ", result)}");
+            result = converter.Generate("RUESSWURM").First();
+            Console.WriteLine($"Input: RUESSWURM, Output: {string.Join(", ", result)}");
         }
     }
 }

@@ -2,11 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Samwin.UmlautConverterLib.Step1;
+using Xunit.Abstractions;
 
-namespace Samwin.UmlautConverterLib.Tests.Step2
+namespace Samwin.UmlautConverterLib.Step1.Tests
 {
-    public class PlainStringCoverterTests
+    public class UmlautConverterContractTests
     {
+        private readonly ITestOutputHelper _output;
+
+        public UmlautConverterContractTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         public static IEnumerable<object[]> Generators()
         {
             yield return new object[] { new UmlautSimpleConverter() };
@@ -83,6 +91,16 @@ namespace Samwin.UmlautConverterLib.Tests.Step2
             var result = converter.Convert(input);
 
             Assert.Equal(expected, result);
+        }
+        [Theory]
+        [MemberData(nameof(Generators))]
+        public void Converter_Output(IUmlautConverter converter)
+        {
+            Console.WriteLine($"This test method '{nameof(UmlautConverterContractTests)}.{nameof(Converter_Output)}' is used to output the converted text for manual inspection. It does not contain assertions.");
+            var result = converter.Convert("KOESTNER");
+            Console.WriteLine($"Input: KOESTNER, Output: {result}");
+            result = converter.Convert("RUESSWURM");
+            Console.WriteLine($"Input: RUESSWURM, Output: {result}");
         }
     }
 }

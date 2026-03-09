@@ -13,7 +13,7 @@ namespace Samwin.UmlautConverterLib.Utils
     /// </remarks>
     public class UmlautMappingHelper
     {
-        private readonly Dictionary<(char, char), char> _mappings = new()
+        private readonly Dictionary<(char, char), char> _umlautMappingsChar = new()
         {
             // Lowercase
             { ('a', 'e'), 'ä' },
@@ -37,7 +37,9 @@ namespace Samwin.UmlautConverterLib.Utils
 
         public bool TryGetReplacement(char first, char second, out char replacement)
         {
-            return _mappings.TryGetValue((first, second), out replacement);
+            return _umlautMappingsChar.TryGetValue((first, second), out replacement);
         }
+        // Make this internal or public so the Converter can see it
+        public IReadOnlyDictionary<(char First, char Second), char> Mappings => _umlautMappingsChar;
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Samwin.UmlautConverterLib.Step1
 {
@@ -36,26 +37,16 @@ namespace Samwin.UmlautConverterLib.Step1
     /// </remarks>
     public class UmlautSimpleConverter : IUmlautConverter
     {
-        private static readonly Dictionary<string, string> _umlautMappings = new()
+        private readonly Dictionary<string, string> _umlautMappings;
+        public UmlautSimpleConverter()
         {
-            // Lowercase
-            { "ae", "ä" },
-            { "oe", "ö" },
-            { "ue", "ü" },
-            { "ss", "ẞ" },
-
-            // Uppercase first-letter combinations
-            { "Ae", "Ä" },
-            { "Oe", "Ö" },
-            { "Ue", "Ü" },
-
-            // Fully uppercase (optional if needed)
-            { "AE", "Ä" },
-            { "OE", "Ö" },
-            { "UE", "Ü" },
-            { "SS", "ß" } // Capital ß exists in Unicode
-        };
-
+            var helper = new Utils.UmlautMappingHelper();
+            // Transform the char-tuple dictionary into a string dictionary at runtime
+            _umlautMappings = helper.Mappings.ToDictionary(
+                kvp => $"{kvp.Key.First}{kvp.Key.Second}",
+                kvp => kvp.Value.ToString()
+            );
+        }
         /// <summary>
         /// Converts umlaut character sequences in the input string.
         /// </summary>

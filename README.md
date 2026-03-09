@@ -123,7 +123,20 @@ This project demonstrates several engineering concepts:
 - container-friendly design
 
 ---
+# Dependency Injection Support
 
+All library classes are designed to be **stateless and DI-friendly**.  
+For demonstration and simplicity, the console app and example usage do **not** use DI.  
+
+- Since the classes have no internal state, they can be safely registered as singleton or transient services.  
+- You can easily integrate them into your own DI container in production code:
+
+```csharp
+services.AddSingleton<IUmlautConverter, UmlautArrayConverter>();
+services.AddSingleton<IVariationGenerator, BranchingVariationBufferGenerator>();
+services.AddSingleton<ISqlQueryGenerator<SqlQuery>, ParameterizedSqlGenerator>();
+```
+---
 # Container Support
 
 The project includes a Dockerfile allowing containerized execution.
@@ -136,17 +149,28 @@ docker build -t samwin-umlaut-converter .
 
 ---
 
-# Future Improvements
+# Advanced / Experimental Implementation
 
-Possible future enhancements include:
+Planned ideas for a more advanced version of the library include:
 
-- additional language normalization rules
-- SIMD/vectorized text processing
-- streaming text processing pipelines
-- AI-based text normalization integration
+### Caching strategies for improved performance
+Introduce caching mechanisms to avoid recomputing variations for inputs that have already been processed. This could significantly improve performance in scenarios where the same names or identifiers appear repeatedly. Different cache implementations (in-memory or distributed) could be evaluated depending on the deployment environment.
 
----
+### AI-based placeholder for name resolution and normalization
+Explore the use of AI-assisted approaches to improve name normalization and variant resolution. This could help handle edge cases where simple character replacement is insufficient, such as cultural naming variations or ambiguous transliterations. The current architecture is designed so such functionality could be integrated as an optional extension.
 
-# License
+### Configuration-based switching between plain and AI implementations
+Allow users to switch between the deterministic implementation and an AI-assisted implementation through configuration. This ensures predictable behavior for default use cases while enabling experimentation with more advanced resolution strategies. The goal is to maintain backward compatibility while supporting extensibility.
 
-MIT License
+### External umlaut mapping storage via file or database
+Move the umlaut and character mapping definitions from hardcoded structures into configurable external storage. This would allow updates or customization without recompiling the library. Possible sources include JSON/YAML configuration files or database-backed mappings.
+
+### Full Dependency Injection ready architecture
+Design the library so all core components can be wired through dependency injection. This allows consumers to replace implementations (e.g., caching, formatting, or mapping providers) without modifying the core library. It also improves testability and integration with modern application frameworks.
+
+### Optional rate limiting for high-throughput scenarios
+Introduce optional rate limiting mechanisms to control how frequently expensive operations can be executed. This can be useful when AI-based or external service integrations are added later. It helps protect external dependencies and maintain predictable system performance under load.
+
+### Extend unit tests for advanced features
+Expand the test suite to cover advanced behaviors such as caching, configuration switching, and external mapping providers. Additional tests would ensure consistent behavior across different implementations. This would also help validate extensibility points and guard against regressions.
+

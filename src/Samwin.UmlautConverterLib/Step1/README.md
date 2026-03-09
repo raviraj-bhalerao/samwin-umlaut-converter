@@ -17,7 +17,7 @@ All implementations convert common German character sequences.
 | ue | ü |
 | ss | ß |
 
-Uppercase inputs are also supported.
+Uppercase and mixed case inputs are also supported.
 
 Example:
 
