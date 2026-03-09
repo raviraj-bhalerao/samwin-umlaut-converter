@@ -8,13 +8,6 @@ namespace Samwin.UmlautConverterLib.Step1.Tests
 {
     public class UmlautConverterContractTests
     {
-        private readonly ITestOutputHelper _output;
-
-        public UmlautConverterContractTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
         public static IEnumerable<object[]> Generators()
         {
             yield return new object[] { new UmlautSimpleConverter() };
@@ -96,7 +89,7 @@ namespace Samwin.UmlautConverterLib.Step1.Tests
         [MemberData(nameof(Generators))]
         public void Converter_Output(IUmlautConverter converter)
         {
-            Console.WriteLine($"This test method '{nameof(UmlautConverterContractTests)}.{nameof(Converter_Output)}' is used to output the converted text for manual inspection. It does not contain assertions.");
+            Console.WriteLine($"This test method '{nameof(UmlautConverterContractTests)}.{nameof(Converter_Output)}'  for {converter.GetType().FullName} is used to output the converted text for manual inspection. It does not contain assertions.");
             var result = converter.Convert("KOESTNER");
             Console.WriteLine($"Input: KOESTNER, Output: {result}");
             result = converter.Convert("RUESSWURM");

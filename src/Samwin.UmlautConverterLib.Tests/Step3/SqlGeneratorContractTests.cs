@@ -8,12 +8,6 @@ namespace Samwin.UmlautConverterLib.Step3.Tests
 {
     public class SqlGeneratorContractTests
     {
-        private readonly ITestOutputHelper _output;
-
-        public SqlGeneratorContractTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
         public static IEnumerable<object[]> Generators()
         {
             IVariationGenerator variationGenerator = new BranchingVariationBufferGenerator();
@@ -118,7 +112,7 @@ namespace Samwin.UmlautConverterLib.Step3.Tests
         [MemberData(nameof(Generators))]
         public void SqlGenerator_GeneratesOutput(object generatorObj, IVariationGenerator variationGenerator)
         {
-            Console.WriteLine($"This test method '{nameof(SqlGeneratorContractTests)}.{nameof(SqlGenerator_GeneratesOutput)}' is used to output the generated SQL for manual inspection. It does not contain assertions.");
+            Console.WriteLine($"This test method '{nameof(SqlGeneratorContractTests)}.{nameof(SqlGenerator_GeneratesOutput)}' for {generatorObj.GetType().FullName} outputs the generated SQL by for manual inspection. It does not contain assertions.");
             dynamic generator = generatorObj;
             var names = new[] { "KOESTNER", "RUESSWURM", "DUERMUELLER", "JAEAESKELAEINEN", "GROSSSCHAEDL" };
 

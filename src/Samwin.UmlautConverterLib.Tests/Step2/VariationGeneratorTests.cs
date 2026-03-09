@@ -9,12 +9,6 @@ namespace Samwin.UmlautConverterLib.Step2.Tests
 
     public class VariationGeneratorContractTests
     {
-        private readonly ITestOutputHelper _output;
-
-        public VariationGeneratorContractTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
         public static IEnumerable<object[]> Generators()
         {
             yield return new object[] { new SimpleGroundUpVariationGenerator() };
@@ -124,7 +118,7 @@ namespace Samwin.UmlautConverterLib.Step2.Tests
         [MemberData(nameof(Generators))]
         public void Converter_Output(IVariationGenerator converter)
         {
-            Console.WriteLine($"This test method '{nameof(VariationGeneratorContractTests)}.{nameof(Converter_Output)}' is used to output the converted variations for manual inspection. It does not contain assertions.");
+            Console.WriteLine($"This test method '{nameof(VariationGeneratorContractTests)}.{nameof(Converter_Output)}' for {converter.GetType().FullName} is used to output the converted variations for manual inspection. It does not contain assertions.");
             var result = converter.Generate("KOESTNER").First();
             Console.WriteLine($"Input: KOESTNER, Output: {string.Join(", ", result)}");
             result = converter.Generate("RUESSWURM").First();
