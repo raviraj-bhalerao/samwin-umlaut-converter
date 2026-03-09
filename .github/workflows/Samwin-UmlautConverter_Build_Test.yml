@@ -29,7 +29,7 @@ jobs:
       run: |
         echo "##[group]Code Analysis Warnings (Just to demo static analysis integration)"
         echo "Running analyzers via dotnet build..."
-        dotnet build src/Samwin.UmlautConverterLib/Samwin.UmlautConverterLib.csproj --no-restore --configuration Release /p:RunAnalyzersDuringBuild=true /p:TreatWarningsAsErrors=false /v:detailed
+        dotnet build src/Samwin.UmlautConverterLib/Samwin.UmlautConverterLib.csproj --no-restore --configuration Release /p:RunAnalyzersDuringBuild=true /p:TreatWarningsAsErrors=false
 
         echo ""
         echo "Running dotnet format to catch cross-platform analyzer issues..."
