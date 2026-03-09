@@ -89,7 +89,7 @@ namespace Samwin.UmlautConverterLib.Step1.Tests
         [MemberData(nameof(Generators))]
         public void Converter_Output(IUmlautConverter converter)
         {
-            Console.WriteLine($"::group::{converter.GetType().Name}.SQLs in {nameof(UmlautConverterContractTests)}.{nameof(Converter_Output)}");
+            Console.WriteLine($"::group::{converter.GetType().Name}.UmlautConversions in {nameof(UmlautConverterContractTests)}.{nameof(Converter_Output)}");
             try
             {
                 var result = converter.Convert("KOESTNER");

@@ -118,7 +118,7 @@ namespace Samwin.UmlautConverterLib.Step2.Tests
         [MemberData(nameof(Generators))]
         public void Converter_Output(IVariationGenerator converter)
         {
-            Console.WriteLine($"::group::{converter.GetType().Name}.SQLs in {nameof(VariationGeneratorContractTests)}.{nameof(Converter_Output)}");
+            Console.WriteLine($"::group::{converter.GetType().Name}.ConvertedVariations in {nameof(VariationGeneratorContractTests)}.{nameof(Converter_Output)}");
             try
             {
                 var result = converter.Generate("KOESTNER").First();
