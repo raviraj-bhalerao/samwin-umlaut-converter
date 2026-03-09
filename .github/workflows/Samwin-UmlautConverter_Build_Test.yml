@@ -1,4 +1,4 @@
-name: Samwin UmlautConverter Build & Test
+name: Samwin UmlautConverter Build, Test & Coverage
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '10.0.x' # or the version you are using
+        dotnet-version: '10.0.x'
 
     - name: Restore dependencies
       run: dotnet restore src/Samwin.UmlautConverter.sln
@@ -25,5 +25,27 @@ jobs:
     - name: Build
       run: dotnet build src/Samwin.UmlautConverter.sln --configuration Release --no-restore
 
-    - name: Run tests
-      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj --no-build --configuration Release --framework net10.0 --verbosity normal
+    - name: Run tests with coverage
+      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj --configuration Release --framework net10.0 --collect:"XPlat Code Coverage" --verbosity normal
+
+    - name: Restore .NET tools
+      run: dotnet tool restore
+
+    - name: Generate coverage report
+      run: |
+        dotnet tool run reportgenerator `
+        -reports:"**/coverage.cobertura.xml" `
+        -targetdir:"coverage-report" `
+        -reporttypes:Html
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage-report
+
+    - name: Display coverage summary in Actions
+      uses: tj-actions/coverage-report@v2
+      with:
+        path: '**/coverage.cobertura.xml'
+        reporter: cobertura

@@ -419,3 +419,7 @@ FodyWeavers.xsd
 
 # VS Code files
 .vscode/
+
+# Code coverage results
+coverage-report/
+TestResults/
