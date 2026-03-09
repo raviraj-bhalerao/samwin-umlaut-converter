@@ -35,8 +35,8 @@ samwin-umlaut-converter/
 │   ├── Samwin.UmlautConverterLib.Tests
 │   │   Unit tests verifying correctness of all converters.
 │   │
-│   ├── Samwin.UmlautConverter.Benchmarks
-│   │   BenchmarkDotNet benchmarks used to compare performance and memory usage.
+│   ├── Samwin.UmlautConverter.ConsoleApp.Client
+│   │   Example console application demonstrating how to use the converters.
 │   │
 │   ├── Samwin.UmlautConverter.Benchmarks
 │   │   BenchmarkDotNet benchmarks used to compare performance and memory usage.
@@ -44,8 +44,6 @@ samwin-umlaut-converter/
 │   └── dockerfile
 │       To build the containerised solution
 │    
-├── Samwin.UmlautConverter.sln
-│   Solution for all projects
 ├── Samwin.UmlautConverter.sln
 │   Solution for all projects
 └── README.md
