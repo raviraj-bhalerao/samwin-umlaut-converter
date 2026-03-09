@@ -30,6 +30,11 @@ jobs:
         echo "##[group]Code Analysis Warnings"
         echo "Running analyzers via dotnet build..."
         dotnet build src/Samwin.UmlautConverterLib/Samwin.UmlautConverterLib.csproj --no-restore --configuration Release /p:RunAnalyzersDuringBuild=true /p:TreatWarningsAsErrors=false
+
+        echo ""
+        echo "Running dotnet format to catch cross-platform analyzer issues..."
+        dotnet tool restore
+        dotnet format src/Samwin.UmlautConverterLib/Samwin.UmlautConverterLib.csproj --verify-no-changes || true
         echo "##[endgroup]"
 
     - name: Run tests with coverage
