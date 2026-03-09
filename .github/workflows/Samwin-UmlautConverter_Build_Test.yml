@@ -43,6 +43,6 @@ jobs:
     - name: Display coverage summary in log
       run: |
         echo "##[group]Code Coverage Summary"
-        dotnet tool run reportgenerator -reports:coverage-report/coverage.cobertura.xml -targetdir:coverage-summary -reporttypes:TextSummary
+        dotnet tool run reportgenerator -reports:"src/**/coverage.cobertura.xml" -targetdir:coverage-summary -reporttypes:TextSummary
         cat coverage-summary/Summary.txt
         echo "##[endgroup]"
