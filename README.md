@@ -113,6 +113,24 @@ This will:
 * Generate an HTML report in `coverage-report/`
 * Open `index.html` to view file-level and line-level coverage
 
+# Viewing Code Coverage in GitHub Actions
+
+The code coverage summary is available directly in the **GitHub Actions logs** for the workflow `Samwin UmlautConverter Build, Test & Coverage`.
+
+### Steps to view coverage:
+
+1. Navigate to the **Actions** tab in your repository.
+2. Select the run you want to inspect of the workflow `Samwin UmlautConverter Build, Test & Coverage`.
+3. Expand the log for task `Display coverage summary in log`
+4. Look for the collapsible section `Code Coverage Summary`
+5. Click the triangle to expand — this will show a **text summary** of coverage for projects, including:
+
+* Total lines covered / total lines
+* Coverage percentage
+* Uncovered files or classes
+
+> Tip: You can also download the full **HTML coverage report** artifact (uploaded by the workflow) for a detailed per-file and per-line view.
+
 ### Notes:
 
 * `dotnet-tools.json` ensures all developers use the **same version of reportgenerator**
@@ -238,7 +256,7 @@ When running the unit tests in GitHub Actions, you can inspect the generated out
 
 1. Navigate to the **Actions** tab in your repository.
 2. Select the run you want to inspect of the workflow `Samwin UmlautConverter Build, Test & Coverage`.
-3. Expand the **job log** for task Run tests with coverage.
+3. Expand the **job log** for task `Run tests with coverage`.
 4. Look for the collapsible sections starting with your `Output to inspect:`.
 
 * Click the triangle to expand and see the full output.
@@ -312,19 +330,7 @@ dotnet build src/Samwin.UmlautConverterLib/Samwin.UmlautConverterLib.csproj --no
 
 The CI workflow automatically runs **static analysis** on every push to the `core` branch.
 
-* The workflow includes a dedicated step for analyzers:
-
-```yaml
-- name: Run code analysis
-  run: |
-    echo "##[group]Code Analysis Warnings"
-    dotnet build src/Samwin.UmlautConverterLib/Samwin.UmlautConverterLib.csproj --no-restore --configuration Release
-    echo "##[endgroup]"
-```
-
-* **Collapsible group:** The `##[group]` and `##[endgroup]` markers create a **collapsible section** in the GitHub Actions logs.
-* To view warnings in GitHub Actions:
-
+#### How to view in GitHub Actions
   1. Go to the **Actions** tab in the repository.
   2. Open the workflow run **“Samwin UmlautConverter Build, Test & Coverage”**.
   3. Expand the **“Code Analysis Warnings”** group.
