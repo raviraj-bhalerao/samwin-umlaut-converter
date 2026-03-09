@@ -28,7 +28,7 @@ jobs:
     - name: Run code analysis
       run: |
         echo "##[group]Code Analysis Warnings (Just to demo static analysis integration)"
-        dotnet build src/Samwin.UmlautConverterLib/Samwin.UmlautConverterLib.csproj --no-restore --configuration Release
+        dotnet build src/Samwin.UmlautConverterLib/Samwin.UmlautConverterLib.csproj --no-restore --configuration Release /p:RunAnalyzersDuringBuild=true /v:minimal
         echo "##[endgroup]"
 
     - name: Run tests with coverage
