@@ -404,5 +404,3 @@ This solution is designed not just for standalone execution but to integrate sea
 - **Quality & DevOps practices**: Unit tests, coverage, static analysis, CI/CD pipelines, containerization.
 - **Modular & DI-ready**: All classes are stateless, easily injectable into other systems, and ready for cloud or microservices integration.
 - **Extensible for future features**: AI-assisted or reactive system integration can be added without modifying core logic.
-
-Testing md file change should not invoke CI
