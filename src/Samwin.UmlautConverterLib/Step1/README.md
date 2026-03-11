@@ -317,7 +317,7 @@ Different implementations perform best depending on the workload:
 
 ---
 
-## Engineering Takeaway
+# Engineering Takeaway
 
 This step demonstrates how multiple implementations of the same algorithm can exhibit different performance characteristics depending on the chosen optimization strategy.
 
