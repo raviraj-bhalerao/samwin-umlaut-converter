@@ -5,6 +5,8 @@ on:
     branches: [ core ]
   pull_request:
     branches: [ core ]
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -51,10 +53,13 @@ jobs:
       run: |
         mkdir -p badges
         cp coverage-report/badge_linecoverage.svg badges/coverage.svg
-        git config --global user.name "github-actions"
-        git config --global user.email "github-actions@github.com"
+
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
         git add badges/coverage.svg
-        git commit -m "chore: Update coverage badge [skip ci]" || echo "No changes"
+        git commit -m "chore: update coverage badge [skip ci]" || echo "No changes"
+
         git push
 
     - name: Display coverage summary in log
