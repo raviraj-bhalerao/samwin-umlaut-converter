@@ -3,8 +3,14 @@ name: Samwin UmlautConverter Build, Test & Coverage
 on:
   push:
     branches: [ core ]
+    paths-ignore:
+      - 'README.md'
+      - '*.md'    
   pull_request:
     branches: [ core ]
+    paths-ignore:
+      - 'README.md'
+      - '*.md'    
 permissions:
   contents: write
 
