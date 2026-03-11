@@ -1,7 +1,7 @@
 # samwin-umlaut-converter
 
-[![Build & Test](https://github.com/raviraj-bhalerao/samwin-umlaut-converter/actions/workflows/dotnet-build-and-test.yml/badge.svg?branch=core)](https://github.com/raviraj-bhalerao/samwin-umlaut-converter/actions/workflows/Samwin-UmlautConverter_Build_Test.yml?query=branch%3Acore)
-[![Code Coverage](https://img.shields.io/badge/coverage-0%25-lightgrey)](https://github.com/raviraj-bhalerao/samwin-umlaut-converter/actions/workflows/Samwin-UmlautConverter_Build_Test.yml)
+[![Build & Test](https://github.com/raviraj-bhalerao/samwin-umlaut-converter/actions/workflows/Samwin-UmlautConverter_Build_Test.yml/badge.svg?branch=core)](https://github.com/raviraj-bhalerao/samwin-umlaut-converter/actions/workflows/Samwin-UmlautConverter_Build_Test.yml?query=branch%3Acore)
+[![Coverage](https://raw.githubusercontent.com/raviraj-bhalerao/samwin-umlaut-converter/core/badges/coverage.svg)](https://github.com/raviraj-bhalerao/samwin-umlaut-converter/actions)
 
 
 UmlautConverter is a modular .NET library for converting German umlaut sequences and generating text variations.  

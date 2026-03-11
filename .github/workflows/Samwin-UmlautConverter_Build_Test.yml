@@ -38,8 +38,8 @@ jobs:
     - name: Restore .NET tools
       run: dotnet tool restore
 
-    - name: Generate HTML coverage report
-      run: dotnet tool run reportgenerator -reports:"src/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Html
+    - name: Generate HTML coverage report and badge
+      run: dotnet tool run reportgenerator -reports:"src/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:"Html;TextSummary;Badges"
 
     - name: Upload coverage report
       uses: actions/upload-artifact@v4
@@ -47,9 +47,27 @@ jobs:
         name: coverage-report
         path: coverage-report/
     
+    - name: Commit coverage badge
+      run: |
+        mkdir -p badges
+        cp coverage-report/badge_linecoverage.svg badges/coverage.svg
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        git add badges/coverage.svg
+        git commit -m "chore: Update coverage badge [skip ci]" || echo "No changes"
+        git push
+
     - name: Display coverage summary in log
       run: |
         echo "##[group]Code Coverage Summary"
         dotnet tool run reportgenerator -reports:"src/**/coverage.cobertura.xml" -targetdir:coverage-summary -reporttypes:TextSummary
         cat coverage-summary/Summary.txt
         echo "##[endgroup]"
+    
+    - name: Code Coverage Summary
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: src/**/coverage.cobertura.xml
+        badge: true
+        format: markdown
+        output: both
