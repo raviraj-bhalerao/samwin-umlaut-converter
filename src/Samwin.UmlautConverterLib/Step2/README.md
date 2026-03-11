@@ -410,3 +410,9 @@ foreach(var variation in generator.Generate("Muenchen"))
     Console.WriteLine(variation);
 }
 ```
+
+# Streaming & Pipeline Perspective
+
+- Generators support both **in-memory and streaming** usage, allowing integration into pipelines or reactive workflows.
+- Memory-optimized variants reduce GC pressure, ideal for **real-time processing in Web/Cloud applications**.
+- Lazy generation makes it suitable for **large-scale data processing** without blocking UI or API threads.

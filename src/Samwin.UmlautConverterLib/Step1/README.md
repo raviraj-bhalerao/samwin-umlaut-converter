@@ -322,3 +322,9 @@ Different implementations perform best depending on the workload:
 This step demonstrates how multiple implementations of the same algorithm can exhibit different performance characteristics depending on the chosen optimization strategy.
 
 Benchmark-driven development helps identify the most appropriate implementation for specific real-world workloads.
+
+# System Integration Perspective
+
+- **Ready for UI or API integration**: Converters can be wrapped in web services or called from front-end pipelines.
+- **Reactive / high-throughput scenarios**: Supports integration with actor-based systems (e.g., Akka.NET) for parallel processing of large text streams.
+- **Extensible for AI-based enhancements**: Architecture allows AI-assisted normalization or variant prediction.
