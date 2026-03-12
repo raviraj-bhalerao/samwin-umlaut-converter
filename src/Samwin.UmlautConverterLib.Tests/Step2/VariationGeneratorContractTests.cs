@@ -118,12 +118,12 @@ namespace Samwin.UmlautConverterLib.Step2.Tests
         [MemberData(nameof(Generators))]
         public void Converter_Output(IVariationGenerator converter)
         {
-            Console.WriteLine($"::group::Output to inspect : {converter.GetType().Name}.ConvertedVariations in {nameof(VariationGeneratorContractTests)}.{nameof(Converter_Output)}");
+            Console.WriteLine($"::group::Step2 Output to inspect : {converter.GetType().Name}.ConvertedVariations in {nameof(VariationGeneratorContractTests)}.{nameof(Converter_Output)}");
             try
             {
-                var result = converter.Generate("KOESTNER").First();
+                var result = converter.Generate("KOESTNER");
                 Console.WriteLine($"Input: KOESTNER, Output: {string.Join(", ", result)}");
-                result = converter.Generate("RUESSWURM").First();
+                result = converter.Generate("RUESSWURM");
                 Console.WriteLine($"Input: RUESSWURM, Output: {string.Join(", ", result)}");
             }
             finally

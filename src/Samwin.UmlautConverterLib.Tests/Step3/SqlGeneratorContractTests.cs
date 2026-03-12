@@ -112,7 +112,7 @@ namespace Samwin.UmlautConverterLib.Step3.Tests
         [MemberData(nameof(Generators))]
         public void SqlGenerator_GeneratesOutput(object generatorObj, IVariationGenerator variationGenerator)
         {
-            Console.WriteLine($"::group::Output to inspect : {generatorObj.GetType().Name}.SQLs in {nameof(SqlGeneratorContractTests)}.{nameof(SqlGenerator_GeneratesOutput)}");
+            Console.WriteLine($"::group::Step3 Output to inspect : {generatorObj.GetType().Name}.SQLs in {nameof(SqlGeneratorContractTests)}.{nameof(SqlGenerator_GeneratesOutput)}");
             try
             {
                 dynamic generator = generatorObj;

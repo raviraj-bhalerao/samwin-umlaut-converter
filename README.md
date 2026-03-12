@@ -255,7 +255,7 @@ When running the unit tests in GitHub Actions, you can inspect the generated out
 1. Navigate to the **Actions** tab in your repository.
 2. Select the run you want to inspect of the workflow `Samwin UmlautConverter Build, Test & Coverage`.
 3. Expand the **job log** for task `Run tests with coverage`.
-4. Look for the collapsible sections starting with your `Output to inspect:`.
+4. Look for the collapsible sections starting with your `Step# Output to inspect:`.
 
 * Click the triangle to expand and see the full output.
 * This keeps logs organized while showing detailed results such as all generated SQL statements or converted values.
