@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+
+          <!-- Exclude compiler-generated and tool-generated types -->
+          <ExcludeByAttribute>
+            CompilerGeneratedAttribute
+            GeneratedCodeAttribute
+          </ExcludeByAttribute>
+
+          <!-- Exclude generated source files -->
+          <ExcludeByFile>
+            **/obj/**
+          </ExcludeByFile>
+
+          <!-- Exclude entire namespaces by type wildcard -->
+          <Exclude>
+            [Microsoft.AspNetCore.OpenApi.Generated.*]
+            [System.Runtime.CompilerServices.*]
+          </Exclude>
+
+          <!-- Optional: exclude entire assemblies if needed -->
+          <!-- <Exclude>
+            [SomeAssembly.*]
+          </Exclude> -->
+
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

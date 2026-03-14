@@ -2,12 +2,12 @@ name: Samwin UmlautConverter Build, Test & Coverage
 
 on:
   push:
-    branches: [ core ]
+    branches: [ advance ]
     paths-ignore:
       - 'README.md'
       - '*.md'    
   pull_request:
-    branches: [ core ]
+    branches: [ advance ]
     paths-ignore:
       - 'README.md'
       - '*.md'    
@@ -41,7 +41,9 @@ jobs:
       run: dotnet build src/Samwin.UmlautConverter.sln --configuration Release --no-restore
 
     - name: Run tests with coverage
-      run: dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj --configuration Release --framework net10.0 --collect:"XPlat Code Coverage" --verbosity normal
+      run: |
+        dotnet test src/Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj --configuration Release --framework net10.0 --collect:"XPlat Code Coverage" --settings coverage.runsettings --verbosity normal
+        dotnet test src/Samwin.UmlautConverter.Api.Tests/Samwin.UmlautConverter.Api.Tests.csproj --configuration Release --framework net10.0 --collect:"XPlat Code Coverage" --settings coverage.runsettings --verbosity normal
 
     - name: Restore .NET tools
       run: dotnet tool restore

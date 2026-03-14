@@ -1,7 +1,7 @@
 # samwin-umlaut-converter
 
-[![Build & Test](https://github.com/raviraj-bhalerao/samwin-umlaut-converter/actions/workflows/Samwin-UmlautConverter_Build_Test.yml/badge.svg?branch=core)](https://github.com/raviraj-bhalerao/samwin-umlaut-converter/actions/workflows/Samwin-UmlautConverter_Build_Test.yml?query=branch%3Acore)
-![Coverage](https://raw.githubusercontent.com/raviraj-bhalerao/samwin-umlaut-converter/core/badges/coverage.svg)
+[![Build & Test](https://github.com/raviraj-bhalerao/samwin-umlaut-converter/actions/workflows/Samwin-UmlautConverter_Build_Test.yml/badge.svg?branch=advance)](https://github.com/raviraj-bhalerao/samwin-umlaut-converter/actions/workflows/Samwin-UmlautConverter_Build_Test.yml?query=branch%3Aadvance)
+![Coverage](https://raw.githubusercontent.com/raviraj-bhalerao/samwin-umlaut-converter/advance/badges/coverage.svg)
 
 
 UmlautConverter is a modular .NET library for converting German umlaut sequences and generating text variations.  
@@ -29,6 +29,12 @@ The project was designed for the **Samwin technical assignment**, with a focus o
 samwin-umlaut-converter/
 │
 ├── src/
+│   ├── Samwin.UmlautConverter.Api
+│   │   ASP.NET Core Web API exposing conversion endpoints and authentication.
+│   │
+│   ├── Samwin.UmlautConverter.Api.Tests
+│   │   Unit tests for API controllers, authentication, and services.
+│   │
 │   ├── Samwin.UmlautConverterLib
 │   │   Core library containing the converter implementations.
 │   │
@@ -262,15 +268,30 @@ When running the unit tests in GitHub Actions, you can inspect the generated out
 
 ---
 
-# Design Goals
+## Design Goals
 
-This project demonstrates several engineering concepts:
+This project is structured in two main parts, each with distinct engineering goals, reflecting the journey from a core library to a production-grade microservice.
 
-* multiple algorithm implementations for comparison
-* performance benchmarking
-* memory allocation optimization
-* modular and testable architecture
-* container-friendly design
+### Part 1: Core Library Goals (`Samwin.UmlautConverterLib`)
+
+The foundational library was built to demonstrate core software engineering excellence:
+
+*   **Algorithmic Diversity**: Multiple algorithm implementations for comparison.
+*   **Performance Engineering**: Deep performance benchmarking and memory allocation optimization.
+*   **Modern C# Practices**: Use of memory-efficient types like `Span<T>`, `ArrayPool`, and `string.Create`.
+*   **Testability**: A modular and highly testable architecture with comprehensive unit tests.
+
+### Part 2: Microservice Goals (`Samwin.UmlautConverter.Api`)
+
+The API layer builds upon the core library to demonstrate principles of modern service development, aligning with the "Tech Captain" role:
+
+*   **API Architecture**: A clean, DI-ready ASP.NET Core API following best practices.
+*   **Security**: Implementation of JWT-based authentication and role-based access control.
+*   **Resilience**: Preparing for caching strategies and robust error handling.
+*   **Event-Driven Architecture (EDA)**: Laying the groundwork for asynchronous processing via messaging systems.
+*   **Observability**: Structured for future integration of logging, telemetry, and business metrics.
+*   **Advanced Testing**: A full suite of API unit and integration tests.
+*   **DevOps**: A container-friendly design with a complete CI/CD pipeline via GitHub Actions.
 
 ---
 

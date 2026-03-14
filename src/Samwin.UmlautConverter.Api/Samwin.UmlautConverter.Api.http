@@ -1,0 +1,6 @@
+@Samwin.UmlautConverter.Api_HostAddress = http://localhost:5147
+
+GET {{Samwin.UmlautConverter.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

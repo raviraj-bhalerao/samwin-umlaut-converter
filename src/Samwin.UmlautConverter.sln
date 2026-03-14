@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samwin.UmlautConverter.Cons
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samwin.UmlautConverter.Benchmarks", "Samwin.UmlautConverter.Benchmarks\Samwin.UmlautConverter.Benchmarks.csproj", "{F251F234-8930-4C66-B1CA-BFC9457587BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samwin.UmlautConverter.Api", "Samwin.UmlautConverter.Api\Samwin.UmlautConverter.Api.csproj", "{CBFD545D-1BE9-4F78-B065-0E92A654C845}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samwin.UmlautConverter.Api.Tests", "Samwin.UmlautConverter.Api.Tests\Samwin.UmlautConverter.Api.Tests.csproj", "{D938175D-84FD-4ADC-A0BF-142920E317FF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +73,30 @@ Global
 		{F251F234-8930-4C66-B1CA-BFC9457587BF}.Release|x64.Build.0 = Release|Any CPU
 		{F251F234-8930-4C66-B1CA-BFC9457587BF}.Release|x86.ActiveCfg = Release|Any CPU
 		{F251F234-8930-4C66-B1CA-BFC9457587BF}.Release|x86.Build.0 = Release|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Debug|x64.Build.0 = Debug|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Debug|x86.Build.0 = Debug|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Release|x64.ActiveCfg = Release|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Release|x64.Build.0 = Release|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Release|x86.ActiveCfg = Release|Any CPU
+		{CBFD545D-1BE9-4F78-B065-0E92A654C845}.Release|x86.Build.0 = Release|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Debug|x64.Build.0 = Debug|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Debug|x86.Build.0 = Debug|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Release|x64.ActiveCfg = Release|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Release|x64.Build.0 = Release|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Release|x86.ActiveCfg = Release|Any CPU
+		{D938175D-84FD-4ADC-A0BF-142920E317FF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
