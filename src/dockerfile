@@ -1,26 +1,38 @@
-# Use the official .NET 10 SDK image for building
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+# Use the official .NET 10 SDK image for building (Alpine)
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+WORKDIR /src
 
+# Copy solution and project files to leverage Docker layer caching.
+# This step is cached and only re-runs if project dependencies change.
+COPY ["Samwin.UmlautConverter.sln", "."]
+COPY ["Samwin.UmlautConverter.Api/Samwin.UmlautConverter.Api.csproj", "Samwin.UmlautConverter.Api/"]
+COPY ["Samwin.UmlautConverter.Api.Tests/Samwin.UmlautConverter.Api.Tests.csproj", "Samwin.UmlautConverter.Api.Tests/"]
+COPY ["Samwin.UmlautConverter.ConsoleApp.Client/Samwin.UmlautConverter.ConsoleApp.Client.csproj", "Samwin.UmlautConverter.ConsoleApp.Client/"]
+COPY ["Samwin.UmlautConverter.Benchmarks/Samwin.UmlautConverter.Benchmarks.csproj", "Samwin.UmlautConverter.Benchmarks/"]
+COPY ["Samwin.UmlautConverterLib/Samwin.UmlautConverterLib.csproj", "Samwin.UmlautConverterLib/"]
+COPY ["Samwin.UmlautConverterLib.Tests/Samwin.UmlautConverterLib.Tests.csproj", "Samwin.UmlautConverterLib.Tests/"]
+
+# Restore dependencies based on the project files
+RUN dotnet restore "Samwin.UmlautConverter.sln"
+
+# Now, copy the rest of the source code. This layer is invalidated
+# frequently (on every code change), but the restore layer above remains cached.
+COPY . .
+
+# Publish the API, skipping restore since it's already done.
+WORKDIR "/src/Samwin.UmlautConverter.Api"
+RUN dotnet publish "Samwin.UmlautConverter.Api.csproj" -c Release -o /app/publish --no-restore
+
+# Use a smaller, more secure ASP.NET runtime image for the final stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 
-# Copy project files
-COPY ./ ./ 
+# Create a non-root user for security best practices
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
 
-# Restore dependencies
-RUN dotnet restore
+# Copy the published output from the build stage
+COPY --from=build /app/publish .
 
-# Build in Release mode
-RUN dotnet build -c Release --no-restore
-
-# Optional: run unit tests
-# RUN dotnet test --no-restore -c Release
-
-# Use smaller runtime image
-FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
-WORKDIR /app
-
-# Copy compiled output from build stage
-COPY --from=build /app/bin/Release/net10/ ./ 
-
-# Set entrypoint to run the console app
-ENTRYPOINT ["dotnet", "Samwin.UmlautConverter.ConsoleApp.Client.exe"]
+# Set entrypoint to run the API
+ENTRYPOINT ["dotnet", "Samwin.UmlautConverter.Api.dll"]
