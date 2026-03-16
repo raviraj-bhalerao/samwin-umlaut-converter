@@ -11,9 +11,9 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
-          TOKEN_KEY: ${{ secrets.TOKEN_KEY }}
-          TOKEN_ISSUER: ${{ secrets.TOKEN_ISSUER }}
-          TOKEN_AUDIENCE: ${{ secrets.TOKEN_AUDIENCE }}
+          TOKEN_KEY: ${{ secrets.JwtSettings__TokenKey }}
+          TOKEN_ISSUER: ${{ vars.JwtSettings__TokenIssuer }}
+          TOKEN_AUDIENCE: ${{ vars.JwtSettings__TokenAudience }}
         run: |
           # Construct JSON payload using the Double Underscore convention for .NET Core Hierarchy
           # This ensures 'JwtSettings__TokenKey' maps to Configuration.GetSection("JwtSettings")["TokenKey"]

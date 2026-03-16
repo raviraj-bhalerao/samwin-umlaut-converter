@@ -47,11 +47,11 @@ samwin-umlaut-converter/
 │   ├── Samwin.UmlautConverter.Benchmarks
 │   │   BenchmarkDotNet benchmarks used to compare performance and memory usage.
 │   │
+│   ├── Samwin.UmlautConverter.sln
+│   │   Solution for all projects
+│   │
 │   └── dockerfile
 │       To build the containerised solution
-│    
-├── Samwin.UmlautConverter.sln
-│   Solution for all projects
 └── README.md
     Project overview and usage instructions.
 
