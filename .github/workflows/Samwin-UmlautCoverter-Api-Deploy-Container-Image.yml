@@ -5,6 +5,8 @@ on:
     workflows: ["Samwin UmlautConverter Build, Test & Coverage"] # Must match the 'name:' of your other workflow exactly
     types:
       - completed
+    branches:
+      - advance
 
 jobs:
   build-and-push:

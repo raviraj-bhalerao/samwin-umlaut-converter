@@ -2,12 +2,12 @@ name: Samwin UmlautConverter Build, Test & Coverage
 
 on:
   push:
-    branches: [ advance ]
+    branches: [ advance ] # Add other branches you want to deploy reports for
     paths-ignore:
       - 'README.md'
       - '*.md'    
   pull_request:
-    branches: [ advance ]
+    branches: [ advance ] # Match the branches from the push trigger
     paths-ignore:
       - 'README.md'
       - '*.md'    
@@ -56,6 +56,22 @@ jobs:
       with:
         name: coverage-report
         path: coverage-report/
+
+    - name: Deploy Coverage to GitHub Pages
+      # Only run on a push event to a branch, not on pull requests
+      if: github.event_name == 'push'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./coverage-report
+        destination_dir: ${{ github.ref_name }} # Publish to a branch-specific directory
+
+    - name: Add Coverage Report Link to Job Summary
+      if: github.event_name == 'push'
+      run: |
+        echo "### 📊 Live Coverage Report" >> $GITHUB_STEP_SUMMARY
+        echo "View the full HTML coverage report for the `${{ github.ref_name }}` branch:" >> $GITHUB_STEP_SUMMARY
+        echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ github.ref_name }}/" >> $GITHUB_STEP_SUMMARY
     
     - name: Commit coverage badge
       run: |
@@ -76,6 +92,7 @@ jobs:
         dotnet tool run reportgenerator -reports:"src/**/coverage.cobertura.xml" -targetdir:coverage-summary -reporttypes:TextSummary
         cat coverage-summary/Summary.txt
         echo "##[endgroup]"
+        
     
     - name: Code Coverage Summary
       uses: irongut/CodeCoverageSummary@v1.3.0
