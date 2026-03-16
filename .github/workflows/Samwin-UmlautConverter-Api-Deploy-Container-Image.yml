@@ -14,7 +14,11 @@ permissions:
 jobs:
   build-and-push:
     # Only run if manually triggered OR triggered by a successful workflow_run
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    if: | 
+      ${{ github.event_name != 'workflow_run' || 
+        (github.event.workflow_run.conclusion == 'success' && 
+          github.event.workflow_run.head_branch == 'advance') }}
+          
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code from triggering branch
