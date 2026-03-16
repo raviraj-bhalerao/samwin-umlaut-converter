@@ -10,10 +10,12 @@ namespace Samwin.UmlautConverter.Api
     {
         public static void Main(string[] args)
         {
+#if DEBUG
             // Setup environment variables for the auth provider
-            Environment.SetEnvironmentVariable("TokenKey", "this_is_a_super_secret_key_with_32_chars!");
-            Environment.SetEnvironmentVariable("TokenIssuer", "demo-api");
-            Environment.SetEnvironmentVariable("TokenAudience", "demo-client");
+            Environment.SetEnvironmentVariable("JwtSettings__TokenKey", "this_is_a_super_secret_key_with_32_chars!");
+            Environment.SetEnvironmentVariable("JwtSettings__TokenIssuer", "demo-api");
+            Environment.SetEnvironmentVariable("JwtSettings__TokenAudience", "demo-client");
+#endif
 
             try
             {
@@ -21,10 +23,12 @@ namespace Samwin.UmlautConverter.Api
             }
             finally
             {
+#if DEBUG
                 // Ensure cleanup on exit
-                Environment.SetEnvironmentVariable("TokenKey", null);
-                Environment.SetEnvironmentVariable("TokenIssuer", null);
-                Environment.SetEnvironmentVariable("TokenAudience", null);
+                Environment.SetEnvironmentVariable("JwtSettings__TokenKey", null);
+                Environment.SetEnvironmentVariable("JwtSettings__TokenIssuer", null);
+                Environment.SetEnvironmentVariable("JwtSettings__TokenAudience", null);
+#endif
             }
         }
 

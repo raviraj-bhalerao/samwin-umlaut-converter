@@ -1,0 +1,38 @@
+name: Samwin UmlautConverter Api Update Config
+
+on:
+  workflow_dispatch: # Manual trigger only
+
+jobs:
+  update-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Render Environment Variables
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          TOKEN_KEY: ${{ secrets.TOKEN_KEY }}
+          TOKEN_ISSUER: ${{ secrets.TOKEN_ISSUER }}
+          TOKEN_AUDIENCE: ${{ secrets.TOKEN_AUDIENCE }}
+        run: |
+          # Construct JSON payload using the Double Underscore convention for .NET Core Hierarchy
+          # This ensures 'JwtSettings__TokenKey' maps to Configuration.GetSection("JwtSettings")["TokenKey"]
+          jq -n \
+            --arg key "$TOKEN_KEY" \
+            --arg issuer "$TOKEN_ISSUER" \
+            --arg audience "$TOKEN_AUDIENCE" \
+            '[ 
+              {key: "JwtSettings__TokenKey", value: $key}, 
+              {key: "JwtSettings__TokenIssuer", value: $issuer}, 
+              {key: "JwtSettings__TokenAudience", value: $audience} 
+            ]' > env_vars.json
+
+          # Push to Render API
+          curl -X PUT "https://api.render.com/v1/services/$RENDER_SERVICE_ID/env-vars" \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            -d @env_vars.json
+
+      - name: Trigger Render Deployment
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}

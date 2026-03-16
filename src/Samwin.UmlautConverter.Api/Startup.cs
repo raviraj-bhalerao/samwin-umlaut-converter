@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Samwin.UmlautConverter.Api.Services;
+using Samwin.UmlautConverter.Api.Settings;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
@@ -26,8 +26,13 @@ namespace Samwin.UmlautConverter.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddSingleton<IAuthConfigProvider, EnvironmentAuthConfigProvider>();
             services.AddScoped<ICreateTokenService, TokenGeneratorService>();
+
+            // This registers the JwtSettings class, binds it to the "JwtSettings" section of your configuration,
+            // and enables validation based on the data annotations in the JwtSettings class.
+            services.AddOptions<JwtSettings>()
+                .Bind(Configuration.GetSection(JwtSettings.SectionName))
+                .ValidateDataAnnotations();
 
             // JWT authentication
             services.AddAuthentication(options =>
@@ -35,40 +40,42 @@ namespace Samwin.UmlautConverter.Api
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(); // Register the handler, but defer configuration
+            .AddJwtBearer(options =>
+            {
+                // We retrieve the strongly-typed settings from the configuration.
+                // The '!' null-forgiving operator is safe here because ValidateDataAnnotations()
+                // will throw an exception on startup if the settings are not configured correctly.
+                var jwtSettings = Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()!;
 
-            // Use the Options Pattern to configure JwtBearerOptions using IAuthConfigProvider via DI
-            services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-                .Configure<IAuthConfigProvider>((options, authConfig) =>
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    options.TokenValidationParameters = new TokenValidationParameters
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSettings.TokenIssuer,
+                    ValidAudience = jwtSettings.TokenAudience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.TokenKey))
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
                     {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = authConfig.GetIssuer(),
-                        ValidAudience = authConfig.GetAudience(),
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authConfig.GetSecretKey()))
-                    };
-                    options.Events = new JwtBearerEvents
-                    {
-                        OnAuthenticationFailed = context =>
-                        {
-                            Console.WriteLine("Authentication failed: " + context.Exception.Message);
-                            return Task.CompletedTask;
-                        }
-                    };
-                });
+                        Console.WriteLine("Authentication failed: " + context.Exception.Message);
+                        return Task.CompletedTask;
+                    }
+                };
+            });
 
             // Swagger with JWT support
             services.AddSwaggerGen(c =>
             {
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                     Name = "Authorization",
                     Type = SecuritySchemeType.Http,
-                    Scheme = "bearer",
+                    Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header
                 });

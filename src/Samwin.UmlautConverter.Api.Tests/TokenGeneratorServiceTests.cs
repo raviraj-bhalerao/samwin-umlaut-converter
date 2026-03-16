@@ -3,20 +3,29 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using Microsoft.Extensions.Options;
 using Samwin.UmlautConverter.Api.Services;
+using Samwin.UmlautConverter.Api.Settings;
 using Xunit;
 
 namespace Samwin.UmlautConverter.Api.Tests
 {
     public class TokenGeneratorServiceTests
     {
-        private readonly IAuthConfigProvider _fakeAuthConfig;
+        private readonly JwtSettings _jwtSettings;
         private readonly TokenGeneratorService _service;
 
         public TokenGeneratorServiceTests()
         {
-            _fakeAuthConfig = new FakeAuthConfigProvider();
-            _service = new TokenGeneratorService(_fakeAuthConfig);
+            _jwtSettings = new JwtSettings
+            {
+                // Key must be at least 32 chars for HmacSha256
+                TokenKey = "TEST_SECRET_KEY_MUST_BE_VERY_LONG_FOR_HMAC_SHA256_VALIDATION",
+                TokenIssuer = "test-suite-issuer",
+                TokenAudience = "test-suite-audience"
+            };
+
+            _service = new TokenGeneratorService(Options.Create(_jwtSettings));
         }
 
         [Fact]
@@ -39,14 +48,14 @@ namespace Samwin.UmlautConverter.Api.Tests
             var jwtToken = handler.ReadJwtToken(tokenString);
             
             // Verify Standard Claims (Issuer, Audience)
-            Assert.Equal(_fakeAuthConfig.GetIssuer(), jwtToken.Issuer);
-            Assert.Equal(_fakeAuthConfig.GetAudience(), jwtToken.Audiences.FirstOrDefault());
+            Assert.Equal(_jwtSettings.TokenIssuer, jwtToken.Issuer);
+            Assert.Equal(_jwtSettings.TokenAudience, jwtToken.Audiences.FirstOrDefault());
 
             // Verify Payload Claims
             // Note: We check by value because claim types (e.g. "nameid" vs ClaimTypes.NameIdentifier) 
-            // can vary depending on inbound mapping settings.
-            Assert.Contains(jwtToken.Claims, c => c.Value == email);
-            Assert.Contains(jwtToken.Claims, c => c.Value == subject);
+            // can vary depending on inbound mapping settings. We check for both email and subject.
+            Assert.Contains(jwtToken.Claims, c => c.Type == JwtRegisteredClaimNames.Email && c.Value == email);
+            Assert.Contains(jwtToken.Claims, c => c.Type == JwtRegisteredClaimNames.Sub && c.Value == subject);
         }
 
         [Fact]
@@ -74,14 +83,6 @@ namespace Samwin.UmlautConverter.Api.Tests
             Assert.Contains("Admin", roleClaims);
             Assert.Contains("Supervisor", roleClaims);
             Assert.Contains("Agent", roleClaims);
-        }
-
-        private class FakeAuthConfigProvider : IAuthConfigProvider
-        {
-            // Key must be at least 32 chars for HmacSha256
-            public string GetSecretKey() => "TEST_SECRET_KEY_MUST_BE_VERY_LONG_FOR_HMAC_SHA256_VALIDATION";
-            public string GetIssuer() => "test-suite-issuer";
-            public string GetAudience() => "test-suite-audience";
         }
     }
 }

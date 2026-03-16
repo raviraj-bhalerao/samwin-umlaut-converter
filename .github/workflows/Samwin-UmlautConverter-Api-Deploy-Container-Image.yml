@@ -1,13 +1,11 @@
 name: Samwin UmlautConverter Api Deploy Container Image
 
 on:
-  push:
-    branches: [advance]   # temporary trigger for first run
-  workflow_run:
+  workflow_run: # would run when all workflows are present in default branch
     workflows: ["Samwin UmlautConverter Build, Test & Coverage"]
     types:
       - completed
-  workflow_dispatch:       # allows manual trigger
+  workflow_dispatch: # allows manual trigger
 
 permissions:
   contents: read
@@ -49,5 +47,27 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
+      - name: Update Render Environment Variables
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          TOKEN_KEY: ${{ secrets.TOKEN_KEY }}
+          TOKEN_ISSUER: ${{ secrets.TOKEN_ISSUER }}
+          TOKEN_AUDIENCE: ${{ secrets.TOKEN_AUDIENCE }}
+        run: |
+          # construct JSON payload safely using jq to handle special chars in secrets
+          jq -n \
+            --arg key "$TOKEN_KEY" \
+            --arg issuer "$TOKEN_ISSUER" \
+            --arg audience "$TOKEN_AUDIENCE" \
+            '[ {key: "JwtSettings__TokenKey", value: $key}, {key: "JwtSettings__TokenIssuer", value: $issuer}, {key: "JwtSettings__TokenAudience", value: $audience} ]' > env_vars.json
+
+          # Push to Render API
+          curl -X PUT "https://api.render.com/v1/services/$RENDER_SERVICE_ID/env-vars" \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            -d @env_vars.json
+
       - name: Trigger Render Deployment
         run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}

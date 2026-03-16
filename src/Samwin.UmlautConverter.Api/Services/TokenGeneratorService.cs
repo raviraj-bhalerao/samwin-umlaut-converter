@@ -1,50 +1,58 @@
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Samwin.UmlautConverter.Api.Settings;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Samwin.UmlautConverter.Api.Services
 {
+    /// <summary>
+    /// Implements token creation logic using strongly-typed JWT settings.
+    /// </summary>
     public class TokenGeneratorService : ICreateTokenService
     {
-        private readonly IAuthConfigProvider _authConfig;
+        private readonly JwtSettings _jwtSettings;
 
-        public TokenGeneratorService(IAuthConfigProvider authConfig)
+        public TokenGeneratorService(IOptions<JwtSettings> jwtOptions)
         {
-            _authConfig = authConfig;
+            _jwtSettings = jwtOptions.Value;
         }
 
         public string CreateToken(string email, string subject, IEnumerable<string>? roles = null)
         {
+            var tokenHandler = new JwtSecurityTokenHandler();
+
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, email),
-                new Claim(ClaimTypes.NameIdentifier, subject)
+                new Claim(JwtRegisteredClaimNames.Sub, subject), // Subject (User ID)
+                new Claim(JwtRegisteredClaimNames.Email, email), // Email
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Token ID
+                new Claim(ClaimTypes.Name, email) // For compatibility with User.Identity.Name
             };
 
             if (roles != null)
             {
                 foreach (var role in roles)
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, role));
+                    claims.Add(new Claim(ClaimTypes.Role, role)); // Add role claims
                 }
             }
 
-            var secretKey = _authConfig.GetSecretKey();
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.TokenKey));
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(1), // Example: Token is valid for 1 hour
+                Issuer = _jwtSettings.TokenIssuer,
+                Audience = _jwtSettings.TokenAudience,
+                SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature)
+            };
 
-            var token = new JwtSecurityToken(
-                issuer: _authConfig.GetIssuer(),
-                audience: _authConfig.GetAudience(),
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }
