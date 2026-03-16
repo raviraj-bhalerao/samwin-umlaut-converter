@@ -1,6 +1,10 @@
 name: Samwin UmlautConverter Api Deploy Container Image
 
 on:
+  workflow_run: # would run when all workflows are present in default branch
+    workflows: ["Samwin UmlautConverter Build, Test & Coverage"]
+    types:
+      - completed
   workflow_dispatch: # This "registers" the button in the UI
 
 jobs:
