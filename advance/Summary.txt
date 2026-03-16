@@ -1,0 +1,50 @@
+Summary
+  Generated on: 03/16/2026 - 17:10:52
+  Coverage date: 03/16/2026 - 17:10:46 - 03/16/2026 - 17:10:50
+  Parser: MultiReport (2x Cobertura)
+  Assemblies: 2
+  Classes: 26
+  Files: 26
+  Line coverage: 98.7%
+  Covered lines: 471
+  Uncovered lines: 6
+  Coverable lines: 477
+  Total lines: 1693
+  Branch coverage: 99% (218 of 220)
+  Covered branches: 218
+  Total branches: 220
+  Method coverage: 96.7% (59 of 61)
+  Full method coverage: 93.4% (57 of 61)
+  Covered methods: 59
+  Fully covered methods: 57
+  Total methods: 61
+
+Samwin.UmlautConverter.Api                                                         100%
+  Samwin.UmlautConverter.Api.Controllers.AuthController                            100%
+  Samwin.UmlautConverter.Api.Services.EnvironmentAuthConfigProvider                100%
+  Samwin.UmlautConverter.Api.Services.TokenGeneratorService                        100%
+
+Samwin.UmlautConverterLib                                                         98.6%
+  Samwin.UmlautConverterLib.Step1.UmlautArrayConverter                             100%
+  Samwin.UmlautConverterLib.Step1.UmlautRentedHeapConverter                        100%
+  Samwin.UmlautConverterLib.Step1.UmlautSimpleConverter                            100%
+  Samwin.UmlautConverterLib.Step1.UmlautStackAllocConverter                        100%
+  Samwin.UmlautConverterLib.Step1.UmlautStackAllocOrRentedHeapConverter            100%
+  Samwin.UmlautConverterLib.Step1.UmlautStringCreateConverter                     96.8%
+  Samwin.UmlautConverterLib.Step2.BitmaskEfficientVariationBufferGenerator         100%
+  Samwin.UmlautConverterLib.Step2.BitmaskEfficientVariationGenerator               100%
+  Samwin.UmlautConverterLib.Step2.BitmaskEfficientVariationYieldBufferGenerator    100%
+  Samwin.UmlautConverterLib.Step2.BitmaskEfficientVariationYieldGenerator          100%
+  Samwin.UmlautConverterLib.Step2.BranchingVariationBufferGenerator                100%
+  Samwin.UmlautConverterLib.Step2.BranchingVariationGenerator                      100%
+  Samwin.UmlautConverterLib.Step2.BranchingVariationYieldBufferGenerator           100%
+  Samwin.UmlautConverterLib.Step2.BranchingVariationYieldGenerator                 100%
+  Samwin.UmlautConverterLib.Step2.SimpleGroundUpVariationGenerator                 100%
+  Samwin.UmlautConverterLib.Step2.StreamingVariationGenerator                      100%
+  Samwin.UmlautConverterLib.Step2.VariationConverterBase                           100%
+  Samwin.UmlautConverterLib.Step3.ParameterizedSqlGenerator                       94.7%
+  Samwin.UmlautConverterLib.Step3.PlainSqlGenerator                               90.4%
+  Samwin.UmlautConverterLib.Step3.SqlHelpers                                       100%
+  Samwin.UmlautConverterLib.Step3.SqlQuery                                         100%
+  Samwin.UmlautConverterLib.Step3.StandardSqlValueFormatter                         75%
+  Samwin.UmlautConverterLib.Utils.UmlautMappingHelper                              100%
