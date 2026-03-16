@@ -1,15 +1,22 @@
 name: Samwin UmlautConverter Api Deploy Container Image
 
 on:
+  push:
+    branches: [advance]   # temporary trigger for first run
   workflow_run:
-    workflows: ["Samwin UmlautConverter Build, Test & Coverage"]  # exact match
+    workflows: ["Samwin UmlautConverter Build, Test & Coverage"]
     types:
       - completed
+  workflow_dispatch:       # allows manual trigger
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build-and-push:
-    # Only run if the previous workflow succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Run if triggered manually/push, OR if triggered by workflow_run and it succeeded
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,13 +29,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: type=raw,value=latest
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./src
+          file: ./src/dockerfile
           push: true
-          # This tags your image as: ghcr.io/your-user/your-repo:latest
-          tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   deploy:
     needs: build-and-push
