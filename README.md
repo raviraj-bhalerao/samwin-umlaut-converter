@@ -367,12 +367,17 @@ The CI workflow automatically runs **static analysis** on every push to the `cor
 
 # Container Support
 
-The project includes a Dockerfile allowing containerized execution.
+The project includes a `Dockerfile` for containerized execution and is automatically published to the GitHub Container Registry (GHCR).
 
-Build container (from **repo root**):
+### Published Image
+
+The image is available on GHCR. You can view the published packages here:  
+https://github.com/raviraj-bhalerao/samwin-umlaut-converter/packages
+
+You can pull the latest version using the following command:
 
 ```powershell
-docker build -t samwin-umlaut-converter .
+docker pull ghcr.io/raviraj-bhalerao/samwin-umlaut-converter-api:latest
 ```
 
 ---
