@@ -55,6 +55,21 @@ jobs:
         name: coverage-report
         path: coverage-report/
     
+    - name: Deploy Coverage to GitHub Pages
+      # Only run on a push event to a branch, not on pull requests
+      if: github.event_name == 'push'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./coverage-report
+        destination_dir: ${{ github.ref_name }} # Publish to a branch-specific directory
+
+    - name: Add Coverage Report Link to Job Summary
+      if: github.event_name == 'push'
+      run: |
+        echo "### 📊 Live Coverage Report" >> $GITHUB_STEP_SUMMARY
+        echo "A live [HTML coverage report](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ github.ref_name }}/) has been deployed for the **${{ github.ref_name }}** branch." >> $GITHUB_STEP_SUMMARY
+
     - name: Commit coverage badge
       run: |
         mkdir -p badges
