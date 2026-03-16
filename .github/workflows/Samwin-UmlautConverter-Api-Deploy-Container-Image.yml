@@ -8,8 +8,16 @@ on:
   workflow_dispatch: # This "registers" the button in the UI
 
 jobs:
-  dummy_job:
+  deploy:
     runs-on: ubuntu-latest
+
+    if: github.event.workflow_run.conclusion == 'success'
+
     steps:
+      - name: Checkout advance branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
       - name: Placeholder
-        run: echo "This is a placeholder to enable the manual trigger button."
+        run: echo "Deployment logic from advance branch can run here."
