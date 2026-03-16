@@ -1,0 +1,11 @@
+name: Samwin UmlautConverter Api Update Config
+
+on:
+  workflow_dispatch: # This "registers" the button in the UI
+
+jobs:
+  dummy_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder
+        run: echo "This is a placeholder to enable the manual trigger button."
