@@ -1,12 +1,10 @@
-name: Samwin UmlautCoverter Api Deploy Container Image
+name: Samwin UmlautConverter Api Deploy Container Image
 
 on:
   workflow_run:
-    workflows: ["Samwin UmlautConverter Build, Test & Coverage"] # Must match the 'name:' of your other workflow exactly
+    workflows: ["Samwin UmlautConverter Build, Test & Coverage"]  # exact match
     types:
       - completed
-    branches:
-      - advance
 
 jobs:
   build-and-push:
