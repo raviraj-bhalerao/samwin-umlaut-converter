@@ -1,11 +1,7 @@
 name: Samwin UmlautConverter Api Deploy Container Image
 
 on:
-  workflow_run: # would run when all workflows are present in default branch
-    workflows: ["Samwin UmlautConverter Build, Test & Coverage"]
-    types:
-      - completed
-  workflow_dispatch: # allows manual trigger
+  workflow_dispatch: # allows manual trigger or API dispatch
 
 permissions:
   contents: read
@@ -13,8 +9,6 @@ permissions:
 
 jobs:
   build-and-push:
-    # Run if triggered manually/push, OR if triggered by workflow_run and it succeeded
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -55,14 +49,12 @@ jobs:
           TOKEN_ISSUER: ${{ vars.JwtSettings__TokenIssuer }}
           TOKEN_AUDIENCE: ${{ vars.JwtSettings__TokenAudience }}
         run: |
-          # construct JSON payload safely using jq to handle special chars in secrets
           jq -n \
             --arg key "$TOKEN_KEY" \
             --arg issuer "$TOKEN_ISSUER" \
             --arg audience "$TOKEN_AUDIENCE" \
             '[ {key: "JwtSettings__TokenKey", value: $key}, {key: "JwtSettings__TokenIssuer", value: $issuer}, {key: "JwtSettings__TokenAudience", value: $audience} ]' > env_vars.json
 
-          # Push to Render API
           curl -X PUT "https://api.render.com/v1/services/$RENDER_SERVICE_ID/env-vars" \
             -H "Authorization: Bearer $RENDER_API_KEY" \
             -H "Accept: application/json" \
