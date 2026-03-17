@@ -22,12 +22,18 @@ jobs:
         run: |
           echo "branch=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_OUTPUT
 
-      # Step 2: Check if deploy-child workflow exists in that branch
+      # Step 2.a: Check out triggering branch
+      - name: Checkout triggering branch - ${{ github.event.workflow_run.head_branch }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 1   # shallow fetch is enough for ls-tree
+
+      # Step 2.b: Check if deploy-child workflow exists in that branch
       - name: Check deploy-child workflow existence
         id: check
         run: |
-          git fetch origin ${{ steps.vars.outputs.branch }}
-          if git ls-tree -r origin/${{ steps.vars.outputs.branch }} --name-only | grep -q ".github/workflows/Samwin-UmlautConverter-Api Deploy.yml"; then
+          if git ls-tree -r HEAD --name-only | grep -q ".github/workflows/Samwin-UmlautConverter-Api-Deploy.yml"; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
@@ -37,11 +43,11 @@ jobs:
       - name: Trigger deploy-child workflow
         if: ${{ steps.check.outputs.exists == 'true' }}
         run: |
-          echo "✅ Triggering Samwin-UmlautConverter-Api Deploy.yml in branch: ${{ steps.vars.outputs.branch }}"
+          echo "✅ Triggering Samwin-UmlautConverter-Api-Deploy.yml in branch: ${{ steps.vars.outputs.branch }}"
           curl -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: Bearer ${{ secrets.PAT_WORKFLOW_DISPATCH }}" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/Samwin-UmlautConverter-Api Deploy.yml/dispatches \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/Samwin-UmlautConverter-Api-Deploy.yml/dispatches \
             -d '{"ref":"'"${{ steps.vars.outputs.branch }}"'"}'
 
       # Step 4: Log outcome
@@ -51,5 +57,5 @@ jobs:
             echo "✅ Deploy triggered for branch: ${{ steps.vars.outputs.branch }}"
             echo "🔗 Check Actions: https://github.com/${{ github.repository }}/actions"
           else
-            echo "⚠️ Samwin-UmlautConverter-Api Deploy.yml not found in branch: ${{ steps.vars.outputs.branch }}"
+            echo "⚠️ Samwin-UmlautConverter-Api-Deploy.yml not found in branch: ${{ steps.vars.outputs.branch }}"
           fi
