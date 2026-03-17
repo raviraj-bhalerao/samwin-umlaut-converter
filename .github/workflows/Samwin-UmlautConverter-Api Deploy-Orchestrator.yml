@@ -1,0 +1,55 @@
+name: Samwin Deploy Orchestrator
+
+on:
+  workflow_run:
+    workflows: ["Samwin UmlautConverter Build, Test & Coverage"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  dispatch:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Set branch name
+      - name: Set branch name
+        id: vars
+        run: |
+          echo "branch=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_OUTPUT
+
+      # Step 2: Check if deploy-child workflow exists in that branch
+      - name: Check deploy-child workflow existence
+        id: check
+        run: |
+          git fetch origin ${{ steps.vars.outputs.branch }}
+          if git ls-tree -r origin/${{ steps.vars.outputs.branch }} --name-only | grep -q ".github/workflows/Samwin-UmlautConverter-Api Deploy.yml"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Step 3: Trigger deploy-child workflow using PAT
+      - name: Trigger deploy-child workflow
+        if: ${{ steps.check.outputs.exists == 'true' }}
+        run: |
+          echo "✅ Triggering Samwin-UmlautConverter-Api Deploy.yml in branch: ${{ steps.vars.outputs.branch }}"
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer ${{ secrets.PAT_WORKFLOW_DISPATCH }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/Samwin-UmlautConverter-Api Deploy.yml/dispatches \
+            -d '{"ref":"'"${{ steps.vars.outputs.branch }}"'"}'
+
+      # Step 4: Log outcome
+      - name: Log result
+        run: |
+          if [ "${{ steps.check.outputs.exists }}" = "true" ]; then
+            echo "✅ Deploy triggered for branch: ${{ steps.vars.outputs.branch }}"
+            echo "🔗 Check Actions: https://github.com/${{ github.repository }}/actions"
+          else
+            echo "⚠️ Samwin-UmlautConverter-Api Deploy.yml not found in branch: ${{ steps.vars.outputs.branch }}"
+          fi
