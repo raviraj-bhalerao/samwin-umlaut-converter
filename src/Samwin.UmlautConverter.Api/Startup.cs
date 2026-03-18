@@ -11,6 +11,9 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading.Tasks;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Metrics;
 namespace Samwin.UmlautConverter.Api
 {
     [ExcludeFromCodeCoverage]
@@ -27,6 +30,18 @@ namespace Samwin.UmlautConverter.Api
         {
             services.AddControllers();
             services.AddScoped<ICreateTokenService, TokenGeneratorService>();
+
+            // Replace your old AddOpenTelemetryTracing block with this:
+            services.AddOpenTelemetry()
+                .ConfigureResource(resource => resource
+                    .AddService("samwin-umlaut-converter-api"))
+                .WithTracing(tracing => tracing
+                    .AddAspNetCoreInstrumentation()
+                // You can easily chain other things here later:
+                // .AddHttpClientInstrumentation() 
+                // .AddOtlpExporter(...)
+                )
+                .WithMetrics(m => m.AddAspNetCoreInstrumentation().AddRuntimeInstrumentation());
 
             // This registers the JwtSettings class, binds it to the "JwtSettings" section of your configuration,
             // and enables validation based on the data annotations in the JwtSettings class.

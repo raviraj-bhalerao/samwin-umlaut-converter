@@ -48,6 +48,7 @@ jobs:
           TOKEN_KEY: ${{ secrets.JwtSettings__TokenKey }}
           TOKEN_ISSUER: ${{ vars.JwtSettings__TokenIssuer }}
           TOKEN_AUDIENCE: ${{ vars.JwtSettings__TokenAudience }}
+          GRAFANA_LOKI_API_KEY: ${{ vars.GRAFANA_LOKI_API_KEY }}
         run: |
           jq -n \
             --arg key "$TOKEN_KEY" \

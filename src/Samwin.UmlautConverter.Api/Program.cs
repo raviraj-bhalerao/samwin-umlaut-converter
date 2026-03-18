@@ -1,7 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NLog;
+using NLog.Web;
 
 namespace Samwin.UmlautConverter.Api
 {
@@ -10,26 +16,44 @@ namespace Samwin.UmlautConverter.Api
     {
         public static void Main(string[] args)
         {
-#if DEBUG
-            // Setup environment variables for the auth provider
-            Environment.SetEnvironmentVariable("JwtSettings__TokenKey", "this_is_a_super_secret_key_with_32_chars!");
-            Environment.SetEnvironmentVariable("JwtSettings__TokenIssuer", "demo-api");
-            Environment.SetEnvironmentVariable("JwtSettings__TokenAudience", "demo-client");
-#endif
+
+            SetEnvironmentVariables(); 
+            // NLog: setup the logger first to catch all errors
+            var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
 
             try
             {
+                logger.Debug("init main");
                 CreateHostBuilder(args).Build().Run();
+            }
+            catch (Exception exception)
+            {
+                // NLog: catch setup errors
+                logger.Error(exception, "Stopped program because of exception");
+                throw;
             }
             finally
             {
-#if DEBUG
-                // Ensure cleanup on exit
-                Environment.SetEnvironmentVariable("JwtSettings__TokenKey", null);
-                Environment.SetEnvironmentVariable("JwtSettings__TokenIssuer", null);
-                Environment.SetEnvironmentVariable("JwtSettings__TokenAudience", null);
-#endif
+                SetEnvironmentVariables(true);
+                // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
+                LogManager.Shutdown();
             }
+        }
+
+        private static void SetEnvironmentVariables(bool reset = false)
+        {
+#if DEBUG
+            if (File.Exists("env.tmp"))
+            {
+                var json = File.ReadAllText("env.tmp");
+                var envVars = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                if (envVars != null)
+                {
+                    foreach (var kv in envVars)
+                        Environment.SetEnvironmentVariable(kv.Key, (reset ? null : kv.Value));
+                }
+            }
+#endif
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -37,7 +61,9 @@ namespace Samwin.UmlautConverter.Api
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                });
+                    webBuilder.ConfigureLogging(logging => logging.ClearProviders());
+                })
+                .UseNLog();
     }
 }
 // var builder = WebApplication.CreateBuilder(args);
