@@ -54,7 +54,8 @@ jobs:
             --arg key "$TOKEN_KEY" \
             --arg issuer "$TOKEN_ISSUER" \
             --arg audience "$TOKEN_AUDIENCE" \
-            '[ {key: "JwtSettings__TokenKey", value: $key}, {key: "JwtSettings__TokenIssuer", value: $issuer}, {key: "JwtSettings__TokenAudience", value: $audience} ]' > env_vars.json
+            --arg lokiapikey "$GRAFANA_LOKI_API_KEY" \
+            '[ {key: "JwtSettings__TokenKey", value: $key}, {key: "JwtSettings__TokenIssuer", value: $issuer}, {key: "JwtSettings__TokenAudience", value: $audience}, {key: "GRAFANA_LOKI_API_KEY", value: $lokiapikey} ]' > env_vars.json
 
           curl -X PUT "https://api.render.com/v1/services/$RENDER_SERVICE_ID/env-vars" \
             -H "Authorization: Bearer $RENDER_API_KEY" \
