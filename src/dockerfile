@@ -33,5 +33,9 @@ USER appuser
 
 COPY --from=build /app/publish .
 
+RUN mkdir -p /app/logs && chown -R appuser:appgroup /app
+
+USER appuser
+
 # Set entrypoint to run the API
 ENTRYPOINT ["dotnet", "Samwin.UmlautConverter.Api.dll"]
