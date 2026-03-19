@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Samwin.UmlautConverter.Api.Services;
 using Samwin.UmlautConverter.Api.Settings;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using OpenTelemetry.Trace;
@@ -29,6 +31,7 @@ namespace Samwin.UmlautConverter.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddDirectoryBrowser();
             services.AddScoped<ICreateTokenService, TokenGeneratorService>();
 
             // Replace your old AddOpenTelemetryTracing block with this:
@@ -110,6 +113,29 @@ namespace Samwin.UmlautConverter.Api
             app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
+
+            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+            if (!Directory.Exists(logPath))
+            {
+                Directory.CreateDirectory(logPath);
+            }
+
+            var fileProvider = new PhysicalFileProvider(logPath);
+            var requestPath = "/logs";
+
+            app.UseDirectoryBrowser(new DirectoryBrowserOptions
+            {
+                FileProvider = fileProvider,
+                RequestPath = requestPath
+            });
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = fileProvider,
+                RequestPath = requestPath,
+                ServeUnknownFileTypes = true,
+                DefaultContentType = "text/plain"
+            });
 
             app.UseRouting();
 
