@@ -68,7 +68,7 @@ jobs:
                {key: "JwtSettings__TokenAudience", value: $jwtTokenAudience}, 
                {key: "GRAFANA_OTLP_ACCESS_TOKEN", value: $grafanaOtlpAccessToken},
                {key: "GRAFANA_OTLP_ENDPOINT", value: $grafanaOtlpEndpoint}, 
-               {key: "GRAFANA_OTLP_INSTANCE_ID", value: $grafanaOtlpInstanceID}
+               {key: "GRAFANA_OTLP_INSTANCE_ID", value: $grafanaOtlpInstanceID},
                {key: "GRAFANA_LOKI_ENDPOINT", value: $grafanaLokiEndpoint}, 
                {key: "GRAFANA_LOKI_INSTANCE_ID", value: $grafanaLokiInstanceID} ]' > env_vars.json
 
