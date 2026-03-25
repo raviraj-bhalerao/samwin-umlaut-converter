@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Samwin.UmlautConverter.Api.Controllers;
 using Samwin.UmlautConverter.Api.Services;
@@ -11,12 +12,19 @@ namespace Samwin.UmlautConverter.Api.Tests.Controllers
     public class AuthControllerTests
     {
         private readonly Mock<ICreateTokenService> _mockTokenService;
+        private readonly Mock<MetricsService> _mockMetricService;
+        private readonly Mock<IActivityService> _mockActivityService;
+        private readonly Mock<ILogger<AuthController>> _mockLogger;
         private readonly AuthController _controller;
 
         public AuthControllerTests()
         {
             _mockTokenService = new Mock<ICreateTokenService>();
-            _controller = new AuthController(_mockTokenService.Object);
+            _mockMetricService = new Mock<MetricsService>();
+            _mockActivityService = new Mock<IActivityService>();
+            _mockLogger = new Mock<ILogger<AuthController>>();
+            _controller = new AuthController(_mockTokenService.Object, _mockActivityService.Object, 
+            _mockMetricService.Object, _mockLogger.Object);
         }
 
         [Fact]

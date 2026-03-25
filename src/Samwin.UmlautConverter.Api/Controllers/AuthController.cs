@@ -14,12 +14,12 @@ namespace Samwin.UmlautConverter.Api.Controllers
     [Route("auth")]
     public class AuthController : ControllerBase
     {
-
         private readonly ICreateTokenService _tokenService;
         private readonly IActivityService _activityService;
         private readonly MetricsService _metricsService;
         private readonly ILogger<AuthController> _logger;
-        public AuthController(ICreateTokenService tokenService, ILogger<AuthController> logger, IActivityService activityService, MetricsService metricsService)
+        public AuthController(ICreateTokenService tokenService, IActivityService activityService,
+            MetricsService metricsService, ILogger<AuthController> logger)
         {
             _tokenService = tokenService;
             _logger = logger;
