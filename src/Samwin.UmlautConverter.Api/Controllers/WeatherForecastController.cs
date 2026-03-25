@@ -29,20 +29,25 @@ namespace Samwin.UmlautConverter.Api.Controllers
         {
             using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "WeatherForecast" }, { "OperationId", Guid.NewGuid() } }))
             {
-                _logger.LogInformation("Test log from Umlaut API 🚀");
-                return Enumerable.Range(1, 5).Select(index =>
-                    new WeatherForecast
-                    (
-                        DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                        Random.Shared.Next(-20, 55),
-                        Summaries[Random.Shared.Next(Summaries.Length)]
-                    ))
-                    .ToArray();
+                _logger.LogInformation("Weather report composing 🚀");
+                WeatherForecast[] toRet = getWeatherForecast();
+                _logger.LogInformation("Weather report composed 🚀");
+                return toRet;
             }
         }
         [HttpGet("secure")]
         [Authorize]
         public WeatherForecast[] SecureGet()
+        {
+            using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "WeatherForecast.Secure" }, { "OperationId", Guid.NewGuid() } }))
+            {
+                _logger.LogInformation("Secure Weather report composing 🚀");
+                WeatherForecast[] toRet = getWeatherForecast();
+                _logger.LogInformation("Secure Weather report composed 🚀");
+                return toRet;
+            }
+        }
+        WeatherForecast[] getWeatherForecast()
         {
             return Enumerable.Range(1, 5).Select(index =>
                 new WeatherForecast
@@ -52,7 +57,8 @@ namespace Samwin.UmlautConverter.Api.Controllers
                     Summaries[Random.Shared.Next(Summaries.Length)]
                 ))
                 .ToArray();
-        }    }
+        }
+    }
 
     [ExcludeFromCodeCoverage]
     public record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)

@@ -423,3 +423,6 @@ FodyWeavers.xsd
 # Code coverage results
 coverage-report/
 TestResults/
+
+# OTEL self diagnostics file
+OTEL_DIAGNOSTICS.json

@@ -48,14 +48,29 @@ jobs:
           TOKEN_KEY: ${{ secrets.JwtSettings__TokenKey }}
           TOKEN_ISSUER: ${{ vars.JwtSettings__TokenIssuer }}
           TOKEN_AUDIENCE: ${{ vars.JwtSettings__TokenAudience }}
-          GRAFANA_LOKI_API_KEY: ${{ secrets.GRAFANA_LOKI_API_KEY }}
+          GRAFANA_OTLP_ACCESS_TOKEN: ${{ secrets.GRAFANA_OTLP_ACCESS_TOKEN }}
+          GRAFANA_LOKI_ENDPOINT: ${{ vars.GRAFANA_LOKI_ENDPOINT }}
+          GRAFANA_LOKI_INSTANCE_ID: ${{ vars.GRAFANA_LOKI_INSTANCE_ID }}
+          GRAFANA_OTLP_ENDPOINT: ${{ vars.GRAFANA_OTLP_ENDPOINT }}
+          GRAFANA_OTLP_INSTANCE_ID: ${{ vars.GRAFANA_OTLP_INSTANCE_ID }}
         run: |
           jq -n \
-            --arg key "$TOKEN_KEY" \
-            --arg issuer "$TOKEN_ISSUER" \
-            --arg audience "$TOKEN_AUDIENCE" \
-            --arg lokiapikey "$GRAFANA_LOKI_API_KEY" \
-            '[ {key: "JwtSettings__TokenKey", value: $key}, {key: "JwtSettings__TokenIssuer", value: $issuer}, {key: "JwtSettings__TokenAudience", value: $audience}, {key: "GRAFANA_LOKI_API_KEY", value: $lokiapikey} ]' > env_vars.json
+            --arg jwtTokenKey "$TOKEN_KEY" \
+            --arg jwtTokenIssuer "$TOKEN_ISSUER" \
+            --arg jwtTokenAudience "$TOKEN_AUDIENCE" \
+            --arg grafanaOtlpAccessToken "$GRAFANA_OTLP_ACCESS_TOKEN" \
+            --arg grafanaOtlpEndpoint "$GRAFANA_OTLP_ENDPOINT" \
+            --arg grafanaOtlpInstanceID "$GRAFANA_OTLP_INSTANCE_ID" \
+            --arg grafanaLokiEndpoint "$GRAFANA_LOKI_ENDPOINT" \
+            --arg grafanaLokiInstanceID "$GRAFANA_LOKI_INSTANCE_ID" \
+            '[ {key: "JwtSettings__TokenKey", value: $jwtTokenKey}, 
+               {key: "JwtSettings__TokenIssuer", value: $jwtTokenIssuer}, 
+               {key: "JwtSettings__TokenAudience", value: $jwtTokenAudience}, 
+               {key: "GRAFANA_OTLP_ACCESS_TOKEN", value: $grafanaOtlpAccessToken},
+               {key: "GRAFANA_OTLP_ENDPOINT", value: $grafanaOtlpEndpoint}, 
+               {key: "GRAFANA_OTLP_INSTANCE_ID", value: $grafanaOtlpInstanceID}
+               {key: "GRAFANA_LOKI_ENDPOINT", value: $grafanaLokiEndpoint}, 
+               {key: "GRAFANA_LOKI_INSTANCE_ID", value: $grafanaLokiInstanceID} ]' > env_vars.json
 
           curl -X PUT "https://api.render.com/v1/services/$RENDER_SERVICE_ID/env-vars" \
             -H "Authorization: Bearer $RENDER_API_KEY" \

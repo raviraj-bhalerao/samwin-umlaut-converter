@@ -3,45 +3,58 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.Json;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Web;
+using System.Threading.Tasks;
 
 namespace Samwin.UmlautConverter.Api
 {
     [ExcludeFromCodeCoverage]
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
 
-            SetEnvironmentVariables(); 
-            // NLog: setup the logger first to catch all errors
-            var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
+            var activitySource = new ActivitySource("Samwin.UmlautConverter");
+            IHost hostToRun;
+            using (var activity = activitySource.StartActivity("AppStartup"))
+            {
+                SetEnvironmentVariables();
+                // NLog: setup the logger first to catch all errors
+                var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
 
-            try
-            {
-                logger.Debug("init main");
-                CreateHostBuilder(args).Build().Run();
+                try
+                {
+                    logger.Debug("init main");
+                    hostToRun = CreateHostBuilder(args).Build();
+                }
+                catch (Exception exception)
+                {
+                    // NLog: catch setup errors
+                    logger.Error(exception, "Stopped program because of exception");
+                    throw;
+                }
+                finally
+                {
+                    SetEnvironmentVariables(true);
+                    // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
+                    LogManager.Flush();
+                }
             }
-            catch (Exception exception)
+            if(hostToRun != null)
             {
-                // NLog: catch setup errors
-                logger.Error(exception, "Stopped program because of exception");
-                throw;
-            }
-            finally
-            {
-                SetEnvironmentVariables(true);
-                // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
-                LogManager.Shutdown();
+                await hostToRun.RunAsync();
             }
         }
 
         private static void SetEnvironmentVariables(bool reset = false)
         {
+            AppContext.SetSwitch("System.Diagnostics.DiagnosticSource.Logging", true);
+            Environment.SetEnvironmentVariable("OTEL_EXPORTER_OTLP_LOGS", "true");
 #if DEBUG
             if (File.Exists("env.tmp"))
             {
@@ -66,44 +79,3 @@ namespace Samwin.UmlautConverter.Api
                 .UseNLog();
     }
 }
-// var builder = WebApplication.CreateBuilder(args);
-
-// // Add services to the container.
-// // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-// builder.Services.AddOpenApi();
-
-// var app = builder.Build();
-
-// // Configure the HTTP request pipeline.
-// if (app.Environment.IsDevelopment())
-// {
-//     app.MapOpenApi();
-// }
-
-// app.UseHttpsRedirection();
-
-// var summaries = new[]
-// {
-//     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-// };
-
-// app.MapGet("/weatherforecast", () =>
-// {
-//     var forecast =  Enumerable.Range(1, 5).Select(index =>
-//         new WeatherForecast
-//         (
-//             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-//             Random.Shared.Next(-20, 55),
-//             summaries[Random.Shared.Next(summaries.Length)]
-//         ))
-//         .ToArray();
-//     return forecast;
-// })
-// .WithName("GetWeatherForecast");
-
-// app.Run();
-
-// record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-// {
-//     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-// }

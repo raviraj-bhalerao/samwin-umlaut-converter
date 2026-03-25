@@ -7,7 +7,6 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Samwin.UmlautConverter.Api.Services;
-using Samwin.UmlautConverter.Api.Settings;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -16,6 +15,8 @@ using System.Threading.Tasks;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
+using Samwin.UmlautConverter.Api.Settings;
+
 namespace Samwin.UmlautConverter.Api
 {
     [ExcludeFromCodeCoverage]
@@ -30,21 +31,58 @@ namespace Samwin.UmlautConverter.Api
         // ConfigureServices method
         public void ConfigureServices(IServiceCollection services)
         {
+
+            var endpoint = Environment.GetEnvironmentVariable("GRAFANA_OTLP_ENDPOINT");
+            var instanceId = Environment.GetEnvironmentVariable("GRAFANA_OTLP_INSTANCE_ID");
+            var apiKey = Environment.GetEnvironmentVariable("GRAFANA_OTLP_ACCESS_TOKEN");
+
+            var authHeader = Convert.ToBase64String(
+                Encoding.UTF8.GetBytes($"{instanceId}:{apiKey}"));
+
             services.AddControllers();
             services.AddDirectoryBrowser();
             services.AddScoped<ICreateTokenService, TokenGeneratorService>();
+            services.AddSingleton<IActivityService, ActivityService>();
+            services.AddSingleton<MetricsService>();
 
-            // Replace your old AddOpenTelemetryTracing block with this:
             services.AddOpenTelemetry()
-                .ConfigureResource(resource => resource
-                    .AddService("samwin-umlaut-converter-api"))
+                .ConfigureResource(r => r.AddService("samwin-umlaut-converter-api"))
+
                 .WithTracing(tracing => tracing
+                    .AddSource("samwin-umlaut-converter-api")
                     .AddAspNetCoreInstrumentation()
-                // You can easily chain other things here later:
-                // .AddHttpClientInstrumentation() 
-                // .AddOtlpExporter(...)
-                )
-                .WithMetrics(m => m.AddAspNetCoreInstrumentation().AddRuntimeInstrumentation());
+                    .AddHttpClientInstrumentation()
+                    .AddOtlpExporter(o =>
+                    {
+                        o.Endpoint = new Uri($"{endpoint}/v1/traces");
+                        o.Headers = $"Authorization=Basic {authHeader}";
+                        o.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+
+                        Console.WriteLine($"Tracing OTLP Endpoint: {o.Endpoint} Protocol: {o.Protocol}");
+                        Console.WriteLine($"Tracing OTLP Header: {o.Headers}");
+                    })
+#if DEBUG
+                    .AddConsoleExporter()
+#endif
+                    )
+
+                .WithMetrics(metrics => metrics
+                    .AddMeter(MetricsService.MeterName, MetricsService.MeterDescription)
+                    .AddAspNetCoreInstrumentation()
+                    .AddRuntimeInstrumentation()
+                    .AddProcessInstrumentation()
+                    .AddOtlpExporter(o =>
+                    {
+                        o.Endpoint = new Uri($"{endpoint}/v1/metrics");
+                        o.Headers = $"Authorization=Basic {authHeader}";
+                        o.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+                        Console.WriteLine($"Metrics OTLP Endpoint: {o.Endpoint} Protocol: {o.Protocol}");
+                        Console.WriteLine($"Metrics OTLP Header: {o.Headers}");
+                    })
+#if DEBUG
+                    .AddConsoleExporter()
+#endif
+                    );
 
             // This registers the JwtSettings class, binds it to the "JwtSettings" section of your configuration,
             // and enables validation based on the data annotations in the JwtSettings class.
@@ -141,7 +179,6 @@ namespace Samwin.UmlautConverter.Api
 
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
