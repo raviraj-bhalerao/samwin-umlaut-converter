@@ -290,7 +290,8 @@ var assemblies = [
   {
     "name": "Samwin.UmlautConverter.Api",
     "classes": [
-      { "name": "Samwin.UmlautConverter.Api.Controllers.AuthController", "rp": "Samwin.UmlautConverter.Api_AuthController.html", "cl": 15, "ucl": 0, "cal": 15, "tl": 71, "cb": 4, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Samwin.UmlautConverter.Api.Controllers.AuthController", "rp": "Samwin.UmlautConverter.Api_AuthController.html", "cl": 37, "ucl": 0, "cal": 37, "tl": 120, "cb": 6, "tb": 6, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Samwin.UmlautConverter.Api.Services.MetricsService", "rp": "Samwin.UmlautConverter.Api_MetricsService.html", "cl": 9, "ucl": 0, "cal": 9, "tl": 22, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverter.Api.Services.TokenGeneratorService", "rp": "Samwin.UmlautConverter.Api_TokenGeneratorService.html", "cl": 25, "ucl": 0, "cal": 25, "tl": 58, "cb": 4, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverter.Api.Settings.JwtSettings", "rp": "Samwin.UmlautConverter.Api_JwtSettings.html", "cl": 3, "ucl": 0, "cal": 3, "tl": 20, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},

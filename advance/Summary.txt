@@ -1,26 +1,27 @@
 Summary
-  Generated on: 03/19/2026 - 17:43:03
-  Coverage date: 03/19/2026 - 17:42:57 - 03/19/2026 - 17:43:01
+  Generated on: 03/25/2026 - 19:06:08
+  Coverage date: 03/25/2026 - 19:06:02 - 03/25/2026 - 19:06:06
   Parser: MultiReport (2x Cobertura)
   Assemblies: 2
-  Classes: 26
-  Files: 26
-  Line coverage: 98.7%
-  Covered lines: 467
+  Classes: 27
+  Files: 27
+  Line coverage: 98.8%
+  Covered lines: 498
   Uncovered lines: 6
-  Coverable lines: 473
-  Total lines: 1684
-  Branch coverage: 99% (210 of 212)
-  Covered branches: 210
-  Total branches: 212
-  Method coverage: 96.7% (59 of 61)
-  Full method coverage: 93.4% (57 of 61)
-  Covered methods: 59
-  Fully covered methods: 57
-  Total methods: 61
+  Coverable lines: 504
+  Total lines: 1755
+  Branch coverage: 99% (212 of 214)
+  Covered branches: 212
+  Total branches: 214
+  Method coverage: 96.9% (64 of 66)
+  Full method coverage: 93.9% (62 of 66)
+  Covered methods: 64
+  Fully covered methods: 62
+  Total methods: 66
 
 Samwin.UmlautConverter.Api                                                         100%
   Samwin.UmlautConverter.Api.Controllers.AuthController                            100%
+  Samwin.UmlautConverter.Api.Services.MetricsService                               100%
   Samwin.UmlautConverter.Api.Services.TokenGeneratorService                        100%
   Samwin.UmlautConverter.Api.Settings.JwtSettings                                  100%
 
