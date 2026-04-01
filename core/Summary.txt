@@ -1,23 +1,23 @@
 Summary
-  Generated on: 03/17/2026 - 20:22:06
-  Coverage date: 03/17/2026 - 20:22:04
+  Generated on: 04/01/2026 - 16:43:14
+  Coverage date: 04/01/2026 - 16:43:12
   Parser: Cobertura
   Assemblies: 1
-  Classes: 23
-  Files: 23
+  Classes: 24
+  Files: 24
   Line coverage: 98.6%
-  Covered lines: 424
+  Covered lines: 452
   Uncovered lines: 6
-  Coverable lines: 430
-  Total lines: 1535
-  Branch coverage: 99% (202 of 204)
-  Covered branches: 202
-  Total branches: 204
-  Method coverage: 96.2% (52 of 54)
-  Full method coverage: 92.5% (50 of 54)
-  Covered methods: 52
-  Fully covered methods: 50
-  Total methods: 54
+  Coverable lines: 458
+  Total lines: 1644
+  Branch coverage: 99% (210 of 212)
+  Covered branches: 210
+  Total branches: 212
+  Method coverage: 96.4% (54 of 56)
+  Full method coverage: 92.8% (52 of 56)
+  Covered methods: 54
+  Fully covered methods: 52
+  Total methods: 56
 
 Samwin.UmlautConverterLib                                                         98.6%
   Samwin.UmlautConverterLib.Step1.UmlautArrayConverter                             100%
@@ -26,6 +26,7 @@ Samwin.UmlautConverterLib                                                       
   Samwin.UmlautConverterLib.Step1.UmlautStackAllocConverter                        100%
   Samwin.UmlautConverterLib.Step1.UmlautStackAllocOrRentedHeapConverter            100%
   Samwin.UmlautConverterLib.Step1.UmlautStringCreateConverter                     96.8%
+  Samwin.UmlautConverterLib.Step1.UmlautStringCreateOnePassConverter               100%
   Samwin.UmlautConverterLib.Step2.BitmaskEfficientVariationBufferGenerator         100%
   Samwin.UmlautConverterLib.Step2.BitmaskEfficientVariationGenerator               100%
   Samwin.UmlautConverterLib.Step2.BitmaskEfficientVariationYieldBufferGenerator    100%
