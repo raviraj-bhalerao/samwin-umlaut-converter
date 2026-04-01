@@ -36,28 +36,28 @@
 <div class="card">
 <div class="card-header">Line coverage</div>
 <div class="card-body">
-<div class="large cardpercentagebar cardpercentagebar0">100%</div>
+<div class="large cardpercentagebar cardpercentagebar20">80%</div>
 <div class="table">
 <table>
 <tr>
 <th>Covered lines:</th>
-<td class="limit-width right" title="9">9</td>
+<td class="limit-width right" title="12">12</td>
 </tr>
 <tr>
 <th>Uncovered lines:</th>
-<td class="limit-width right" title="0">0</td>
+<td class="limit-width right" title="3">3</td>
 </tr>
 <tr>
 <th>Coverable lines:</th>
-<td class="limit-width right" title="9">9</td>
+<td class="limit-width right" title="15">15</td>
 </tr>
 <tr>
 <th>Total lines:</th>
-<td class="limit-width right" title="22">22</td>
+<td class="limit-width right" title="28">28</td>
 </tr>
 <tr>
 <th>Line coverage:</th>
-<td class="limit-width right" title="9 of 9">100%</td>
+<td class="limit-width right" title="12 of 15">80%</td>
 </tr>
 </table>
 </div>
@@ -110,8 +110,11 @@
 <tr><td title=".cctor()"><a href="#file0_line10" class="navigatetohash">.cctor()</a></td><td>100%</td><td>1</td><td>1</td><td>100%</td></tr>
 <tr><td title="get_LoginAttempts()"><a href="#file0_line11" class="navigatetohash">get_LoginAttempts()</a></td><td>100%</td><td>1</td><td>1</td><td>100%</td></tr>
 <tr><td title="get_RequestCounter()"><a href="#file0_line12" class="navigatetohash">get_RequestCounter()</a></td><td>100%</td><td>1</td><td>1</td><td>100%</td></tr>
-<tr><td title="get_JwtGenerationTime()"><a href="#file0_line13" class="navigatetohash">get_JwtGenerationTime()</a></td><td>100%</td><td>1</td><td>1</td><td>100%</td></tr>
-<tr><td title=".ctor()"><a href="#file0_line15" class="navigatetohash">.ctor()</a></td><td>100%</td><td>1</td><td>1</td><td>100%</td></tr>
+<tr><td title="get_TokensConverted()"><a href="#file0_line13" class="navigatetohash">get_TokensConverted()</a></td><td>100%</td><td>2</td><td>1</td><td>0%</td></tr>
+<tr><td title="get_QueriesGenerated()"><a href="#file0_line14" class="navigatetohash">get_QueriesGenerated()</a></td><td>100%</td><td>2</td><td>1</td><td>0%</td></tr>
+<tr><td title="get_VariationsCreated()"><a href="#file0_line15" class="navigatetohash">get_VariationsCreated()</a></td><td>100%</td><td>2</td><td>1</td><td>0%</td></tr>
+<tr><td title="get_JwtGenerationTime()"><a href="#file0_line16" class="navigatetohash">get_JwtGenerationTime()</a></td><td>100%</td><td>1</td><td>1</td><td>100%</td></tr>
+<tr><td title=".ctor()"><a href="#file0_line18" class="navigatetohash">.ctor()</a></td><td>100%</td><td>1</td><td>1</td><td>100%</td></tr>
 </tbody>
 </table>
 </div>
@@ -133,28 +136,37 @@
 <tr class="coverableline" title="Covered (1 visits)" data-coverage="{'AllTestMethods': {'VC': '1', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">1</td><td class="rightmargin right"><a id="file0_line10"></a><code>10</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;private&nbsp;static&nbsp;readonly&nbsp;Meter&nbsp;_samwinPerformanceMeter&nbsp;=&nbsp;new(MeterName,&nbsp;MeterVersion);</code></td></tr>
 <tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line11"></a><code>11</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;Counter&lt;int&gt;&nbsp;LoginAttempts&nbsp;{&nbsp;get;&nbsp;}</code></td></tr>
 <tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line12"></a><code>12</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;Counter&lt;int&gt;&nbsp;RequestCounter&nbsp;{&nbsp;get;&nbsp;}</code></td></tr>
-<tr class="coverableline" title="Covered (1 visits)" data-coverage="{'AllTestMethods': {'VC': '1', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">1</td><td class="rightmargin right"><a id="file0_line13"></a><code>13</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;Histogram&lt;double&gt;&nbsp;JwtGenerationTime&nbsp;{&nbsp;get;&nbsp;}</code></td></tr>
-<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line14"></a><code>14</code></td><td></td><td class="lightgray"><code></code></td></tr>
-<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line15"></a><code>15</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;MetricsService()</code></td></tr>
-<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line16"></a><code>16</code></td><td></td><td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</code></td></tr>
-<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line17"></a><code>17</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LoginAttempts&nbsp;=&nbsp;_samwinPerformanceMeter.CreateCounter&lt;int&gt;(&quot;login_attempts&quot;,&nbsp;description:&nbsp;&quot;Number&nbsp;of&nbsp;login&nbsp;a</code></td></tr>
-<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line18"></a><code>18</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RequestCounter&nbsp;=&nbsp;_samwinPerformanceMeter.CreateCounter&lt;int&gt;(&quot;no_of_requests&quot;,&nbsp;description:&nbsp;&quot;Number&nbsp;of&nbsp;reques</code></td></tr>
-<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line19"></a><code>19</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JwtGenerationTime&nbsp;=&nbsp;_samwinPerformanceMeter.CreateHistogram&lt;double&gt;(&quot;jwt_generation_duration_ms&quot;,&nbsp;descriptio</code></td></tr>
-<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line20"></a><code>20</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td></tr>
-<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line21"></a><code>21</code></td><td></td><td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;}</code></td></tr>
-<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line22"></a><code>22</code></td><td></td><td class="lightgray"><code>}</code></td></tr>
+<tr class="coverableline" title="Not covered (0 visits)" data-coverage="{'AllTestMethods': {'VC': '0', 'LVS': 'red'}}"><td class="red">&nbsp;</td><td class="leftmargin rightmargin right">0</td><td class="rightmargin right"><a id="file0_line13"></a><code>13</code></td><td></td><td class="lightred"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;Counter&lt;int&gt;&nbsp;TokensConverted&nbsp;{&nbsp;get;&nbsp;}</code></td></tr>
+<tr class="coverableline" title="Not covered (0 visits)" data-coverage="{'AllTestMethods': {'VC': '0', 'LVS': 'red'}}"><td class="red">&nbsp;</td><td class="leftmargin rightmargin right">0</td><td class="rightmargin right"><a id="file0_line14"></a><code>14</code></td><td></td><td class="lightred"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;Counter&lt;int&gt;&nbsp;QueriesGenerated&nbsp;{&nbsp;get;&nbsp;}</code></td></tr>
+<tr class="coverableline" title="Not covered (0 visits)" data-coverage="{'AllTestMethods': {'VC': '0', 'LVS': 'red'}}"><td class="red">&nbsp;</td><td class="leftmargin rightmargin right">0</td><td class="rightmargin right"><a id="file0_line15"></a><code>15</code></td><td></td><td class="lightred"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;Counter&lt;int&gt;&nbsp;VariationsCreated&nbsp;{&nbsp;get;&nbsp;}</code></td></tr>
+<tr class="coverableline" title="Covered (1 visits)" data-coverage="{'AllTestMethods': {'VC': '1', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">1</td><td class="rightmargin right"><a id="file0_line16"></a><code>16</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;Histogram&lt;double&gt;&nbsp;JwtGenerationTime&nbsp;{&nbsp;get;&nbsp;}</code></td></tr>
+<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line17"></a><code>17</code></td><td></td><td class="lightgray"><code></code></td></tr>
+<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line18"></a><code>18</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;MetricsService()</code></td></tr>
+<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line19"></a><code>19</code></td><td></td><td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</code></td></tr>
+<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line20"></a><code>20</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LoginAttempts&nbsp;=&nbsp;_samwinPerformanceMeter.CreateCounter&lt;int&gt;(&quot;login_attempts&quot;,&nbsp;description:&nbsp;&quot;Number&nbsp;of&nbsp;login&nbsp;a</code></td></tr>
+<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line21"></a><code>21</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TokensConverted&nbsp;=&nbsp;_samwinPerformanceMeter.CreateCounter&lt;int&gt;(&quot;no_of_tokens_converted&quot;,&nbsp;description:&nbsp;&quot;Number&nbsp;</code></td></tr>
+<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line22"></a><code>22</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;QueriesGenerated&nbsp;=&nbsp;_samwinPerformanceMeter.CreateCounter&lt;int&gt;(&quot;no_of_queries_generated&quot;,&nbsp;description:&nbsp;&quot;Numbe</code></td></tr>
+<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line23"></a><code>23</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VariationsCreated&nbsp;=&nbsp;_samwinPerformanceMeter.CreateCounter&lt;int&gt;(&quot;no_of_variations_created&quot;,&nbsp;description:&nbsp;&quot;Num</code></td></tr>
+<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line24"></a><code>24</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RequestCounter&nbsp;=&nbsp;_samwinPerformanceMeter.CreateCounter&lt;int&gt;(&quot;no_of_requests&quot;,&nbsp;description:&nbsp;&quot;Number&nbsp;of&nbsp;reques</code></td></tr>
+<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line25"></a><code>25</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JwtGenerationTime&nbsp;=&nbsp;_samwinPerformanceMeter.CreateHistogram&lt;double&gt;(&quot;jwt_generation_duration_ms&quot;,&nbsp;descriptio</code></td></tr>
+<tr class="coverableline" title="Covered (4 visits)" data-coverage="{'AllTestMethods': {'VC': '4', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">4</td><td class="rightmargin right"><a id="file0_line26"></a><code>26</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</code></td></tr>
+<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line27"></a><code>27</code></td><td></td><td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;}</code></td></tr>
+<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line28"></a><code>28</code></td><td></td><td class="lightgray"><code>}</code></td></tr>
 </tbody>
 </table>
 </div>
-<div class="footer">Generated by: ReportGenerator 5.5.3.0<br />03/25/2026 - 19:10:18<br /><a href="https://github.com/danielpalme/ReportGenerator">GitHub</a> | <a href="https://reportgenerator.io">reportgenerator.io</a></div></div>
+<div class="footer">Generated by: ReportGenerator 5.5.3.0<br />04/01/2026 - 23:22:20<br /><a href="https://github.com/danielpalme/ReportGenerator">GitHub</a> | <a href="https://reportgenerator.io">reportgenerator.io</a></div></div>
 <div class="containerright">
 <div class="containerrightfixed">
 <h1>Methods/Properties</h1>
 <a href="#file0_line10" class="navigatetohash percentagebar percentagebar100" title="Line coverage: 100% - .cctor()"><i class="icon-cube"></i>.cctor()</a><br />
 <a href="#file0_line11" class="navigatetohash percentagebar percentagebar100" title="Line coverage: 100% - get_LoginAttempts()"><i class="icon-wrench"></i>get_LoginAttempts()</a><br />
 <a href="#file0_line12" class="navigatetohash percentagebar percentagebar100" title="Line coverage: 100% - get_RequestCounter()"><i class="icon-wrench"></i>get_RequestCounter()</a><br />
-<a href="#file0_line13" class="navigatetohash percentagebar percentagebar100" title="Line coverage: 100% - get_JwtGenerationTime()"><i class="icon-wrench"></i>get_JwtGenerationTime()</a><br />
-<a href="#file0_line15" class="navigatetohash percentagebar percentagebar100" title="Line coverage: 100% - .ctor()"><i class="icon-cube"></i>.ctor()</a><br />
+<a href="#file0_line13" class="navigatetohash percentagebar percentagebar0" title="Line coverage: 0% - get_TokensConverted()"><i class="icon-wrench"></i>get_TokensConverted()</a><br />
+<a href="#file0_line14" class="navigatetohash percentagebar percentagebar0" title="Line coverage: 0% - get_QueriesGenerated()"><i class="icon-wrench"></i>get_QueriesGenerated()</a><br />
+<a href="#file0_line15" class="navigatetohash percentagebar percentagebar0" title="Line coverage: 0% - get_VariationsCreated()"><i class="icon-wrench"></i>get_VariationsCreated()</a><br />
+<a href="#file0_line16" class="navigatetohash percentagebar percentagebar100" title="Line coverage: 100% - get_JwtGenerationTime()"><i class="icon-wrench"></i>get_JwtGenerationTime()</a><br />
+<a href="#file0_line18" class="navigatetohash percentagebar percentagebar100" title="Line coverage: 100% - .ctor()"><i class="icon-cube"></i>.ctor()</a><br />
 <br/></div>
 </div></div>
 <script type="text/javascript">

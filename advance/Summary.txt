@@ -1,31 +1,34 @@
 Summary
-  Generated on: 03/25/2026 - 19:10:19
-  Coverage date: 03/25/2026 - 19:10:12 - 03/25/2026 - 19:10:16
+  Generated on: 04/01/2026 - 23:22:20
+  Coverage date: 04/01/2026 - 23:22:13 - 04/01/2026 - 23:22:18
   Parser: MultiReport (2x Cobertura)
   Assemblies: 2
-  Classes: 27
-  Files: 27
-  Line coverage: 98.8%
-  Covered lines: 498
-  Uncovered lines: 6
-  Coverable lines: 504
-  Total lines: 1755
-  Branch coverage: 99% (212 of 214)
+  Classes: 30
+  Files: 30
+  Line coverage: 76.8%
+  Covered lines: 501
+  Uncovered lines: 151
+  Coverable lines: 652
+  Total lines: 2031
+  Branch coverage: 82.1% (212 of 258)
   Covered branches: 212
-  Total branches: 214
-  Method coverage: 96.9% (64 of 66)
-  Full method coverage: 93.9% (62 of 66)
+  Total branches: 258
+  Method coverage: 77.1% (64 of 83)
+  Full method coverage: 74.6% (62 of 83)
   Covered methods: 64
   Fully covered methods: 62
-  Total methods: 66
+  Total methods: 83
 
-Samwin.UmlautConverter.Api                                                         100%
+Samwin.UmlautConverter.Api                                                        37.1%
   Samwin.UmlautConverter.Api.Controllers.AuthController                            100%
-  Samwin.UmlautConverter.Api.Services.MetricsService                               100%
+  Samwin.UmlautConverter.Api.Models.WeatherUpdateMessage                             0%
+  Samwin.UmlautConverter.Api.Services.MessageBusClient                               0%
+  Samwin.UmlautConverter.Api.Services.MetricsService                                80%
+  Samwin.UmlautConverter.Api.Services.QueueConsumerService                           0%
   Samwin.UmlautConverter.Api.Services.TokenGeneratorService                        100%
   Samwin.UmlautConverter.Api.Settings.JwtSettings                                  100%
 
-Samwin.UmlautConverterLib                                                         98.6%
+Samwin.UmlautConverterLib                                                         95.2%
   Samwin.UmlautConverterLib.Step1.UmlautArrayConverter                             100%
   Samwin.UmlautConverterLib.Step1.UmlautRentedHeapConverter                        100%
   Samwin.UmlautConverterLib.Step1.UmlautSimpleConverter                            100%
@@ -46,6 +49,6 @@ Samwin.UmlautConverterLib                                                       
   Samwin.UmlautConverterLib.Step3.ParameterizedSqlGenerator                       94.7%
   Samwin.UmlautConverterLib.Step3.PlainSqlGenerator                               90.4%
   Samwin.UmlautConverterLib.Step3.SqlHelpers                                       100%
-  Samwin.UmlautConverterLib.Step3.SqlQuery                                         100%
+  Samwin.UmlautConverterLib.Step3.SqlQuery                                        11.7%
   Samwin.UmlautConverterLib.Step3.StandardSqlValueFormatter                         75%
   Samwin.UmlautConverterLib.Utils.UmlautMappingHelper                              100%

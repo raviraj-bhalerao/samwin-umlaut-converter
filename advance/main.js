@@ -291,7 +291,10 @@ var assemblies = [
     "name": "Samwin.UmlautConverter.Api",
     "classes": [
       { "name": "Samwin.UmlautConverter.Api.Controllers.AuthController", "rp": "Samwin.UmlautConverter.Api_AuthController.html", "cl": 37, "ucl": 0, "cal": 37, "tl": 120, "cb": 6, "tb": 6, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Samwin.UmlautConverter.Api.Services.MetricsService", "rp": "Samwin.UmlautConverter.Api_MetricsService.html", "cl": 9, "ucl": 0, "cal": 9, "tl": 22, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Samwin.UmlautConverter.Api.Models.WeatherUpdateMessage", "rp": "Samwin.UmlautConverter.Api_WeatherUpdateMessage.html", "cl": 0, "ucl": 5, "cal": 5, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Samwin.UmlautConverter.Api.Services.MessageBusClient", "rp": "Samwin.UmlautConverter.Api_MessageBusClient.html", "cl": 0, "ucl": 104, "cal": 104, "tl": 172, "cb": 0, "tb": 24, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Samwin.UmlautConverter.Api.Services.MetricsService", "rp": "Samwin.UmlautConverter.Api_MetricsService.html", "cl": 12, "ucl": 3, "cal": 15, "tl": 28, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Samwin.UmlautConverter.Api.Services.QueueConsumerService", "rp": "Samwin.UmlautConverter.Api_QueueConsumerService.html", "cl": 0, "ucl": 18, "cal": 18, "tl": 54, "cb": 0, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverter.Api.Services.TokenGeneratorService", "rp": "Samwin.UmlautConverter.Api_TokenGeneratorService.html", "cl": 25, "ucl": 0, "cal": 25, "tl": 58, "cb": 4, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverter.Api.Settings.JwtSettings", "rp": "Samwin.UmlautConverter.Api_JwtSettings.html", "cl": 3, "ucl": 0, "cal": 3, "tl": 20, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
@@ -318,7 +321,7 @@ var assemblies = [
       { "name": "Samwin.UmlautConverterLib.Step3.ParameterizedSqlGenerator", "rp": "Samwin.UmlautConverterLib_ParameterizedSqlGenerator.html", "cl": 36, "ucl": 2, "cal": 38, "tl": 108, "cb": 9, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverterLib.Step3.PlainSqlGenerator", "rp": "Samwin.UmlautConverterLib_PlainSqlGenerator.html", "cl": 19, "ucl": 2, "cal": 21, "tl": 78, "cb": 4, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverterLib.Step3.SqlHelpers", "rp": "Samwin.UmlautConverterLib_SqlHelpers.html", "cl": 1, "ucl": 0, "cal": 1, "tl": 12, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Samwin.UmlautConverterLib.Step3.SqlQuery", "rp": "Samwin.UmlautConverterLib_SqlQuery.html", "cl": 2, "ucl": 0, "cal": 2, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Samwin.UmlautConverterLib.Step3.SqlQuery", "rp": "Samwin.UmlautConverterLib_SqlQuery.html", "cl": 2, "ucl": 15, "cal": 17, "tl": 44, "cb": 0, "tb": 18, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverterLib.Step3.StandardSqlValueFormatter", "rp": "Samwin.UmlautConverterLib_StandardSqlValueFormatter.html", "cl": 3, "ucl": 1, "cal": 4, "tl": 34, "cb": 1, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverterLib.Utils.UmlautMappingHelper", "rp": "Samwin.UmlautConverterLib_UmlautMappingHelper.html", "cl": 23, "ucl": 0, "cal": 23, "tl": 45, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
@@ -334,6 +337,30 @@ var riskHotspotMetrics = [
 ];
 
 var riskHotspots = [
+  {
+    "assembly": "Samwin.UmlautConverterLib", "class": "Samwin.UmlautConverterLib.Step3.SqlQuery", "reportPath": "Samwin.UmlautConverterLib_SqlQuery.html", "methodName": "FormatValue(System.Object)", "methodShortName": "FormatValue(...)", "fileIndex": 0, "line": 34,
+    "metrics": [
+      { "value": 156, "exceeded": true },
+      { "value": 12, "exceeded": false },
+    ]},
+  {
+    "assembly": "Samwin.UmlautConverter.Api", "class": "Samwin.UmlautConverter.Api.Services.MessageBusClient", "reportPath": "Samwin.UmlautConverter.Api_MessageBusClient.html", "methodName": "GetChannelAsync()", "methodShortName": "GetChannelAsync()", "fileIndex": 0, "line": 50,
+    "metrics": [
+      { "value": 110, "exceeded": true },
+      { "value": 10, "exceeded": false },
+    ]},
+  {
+    "assembly": "Samwin.UmlautConverter.Api", "class": "Samwin.UmlautConverter.Api.Services.MessageBusClient", "reportPath": "Samwin.UmlautConverter.Api_MessageBusClient.html", "methodName": "<ConsumeMessagesAsync()", "methodShortName": "<ConsumeMessagesAsync()", "fileIndex": 0, "line": 116,
+    "metrics": [
+      { "value": 72, "exceeded": true },
+      { "value": 8, "exceeded": false },
+    ]},
+  {
+    "assembly": "Samwin.UmlautConverterLib", "class": "Samwin.UmlautConverterLib.Step3.SqlQuery", "reportPath": "Samwin.UmlautConverterLib_SqlQuery.html", "methodName": "ToQueryString()", "methodShortName": "ToQueryString()", "fileIndex": 0, "line": 13,
+    "metrics": [
+      { "value": 42, "exceeded": true },
+      { "value": 6, "exceeded": false },
+    ]},
   {
     "assembly": "Samwin.UmlautConverterLib", "class": "Samwin.UmlautConverterLib.Step2.BitmaskEfficientVariationBufferGenerator", "reportPath": "Samwin.UmlautConverterLib_BitmaskEfficientVariationBufferGenerator.html", "methodName": "Generate(System.String)", "methodShortName": "Generate(...)", "fileIndex": 0, "line": 31,
     "metrics": [
