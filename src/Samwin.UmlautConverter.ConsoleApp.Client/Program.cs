@@ -9,11 +9,14 @@ class Program
     static void Main()
     {
 
+        var names = new[] { "KOESTNER", "RUESSWURM", "DUERMUELLER", "JAEAESKELAEINEN", "GROSSSCHAEDL" };
         // var variationCoverter = new BitmaskEfficientVariationYieldGenerator();
         // var result = variationCoverter.Generate("One Two Three Four").ToList();
         // Console.WriteLine("Samwin Umlaut Converter - Sample Client\n");
 
-        var names = new[] { "KOESTNER", "RUESSWURM", "DUERMUELLER", "JAEAESKELAEINEN", "GROSSSCHAEDL" };
+        var stringCreateOnePassConverter = new UmlautStringCreateOnePassConverter();
+        var result = stringCreateOnePassConverter.Convert("KOESTNER");
+
         var paramSqlGenerator = new ParameterizedSqlGenerator(new BranchingVariationBufferGenerator());
         var paramSqlQueries = paramSqlGenerator.Generate(names, combineAll: true).ToList();
         System.Console.WriteLine("Combined parameterised SQL:");

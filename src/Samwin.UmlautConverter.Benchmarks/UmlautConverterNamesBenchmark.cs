@@ -7,7 +7,7 @@ using System.Linq;
 public class UmlautConverterNamesBenchmark
 {
     // Number of repetitions for input string
-    [Params(1, 5)]
+    [Params(1, 5, 10, 20, 25)]
     public int RepeatCount;
 
     private IEnumerable<string> _input = null!;
@@ -15,6 +15,7 @@ public class UmlautConverterNamesBenchmark
     private UmlautStackAllocConverter _stackAllocConverter = null!;
     private UmlautArrayConverter _arrayConverter = null!;
     private UmlautStringCreateConverter _stringCreateConverter = null!;
+    private UmlautStringCreateOnePassConverter _stringCreateConverterOnePass = null!;
     private UmlautStackAllocOrRentedHeapConverter _stackAllocOrRentedHeapConverter = null!;
     private UmlautRentedHeapConverter _rentedHeapConverter = null!;
 
@@ -36,50 +37,57 @@ public class UmlautConverterNamesBenchmark
         _stackAllocConverter = new UmlautStackAllocConverter();
         _arrayConverter = new UmlautArrayConverter();
         _stringCreateConverter = new UmlautStringCreateConverter();
+        _stringCreateConverterOnePass = new UmlautStringCreateOnePassConverter();
         _stackAllocOrRentedHeapConverter = new UmlautStackAllocOrRentedHeapConverter();
         _rentedHeapConverter = new UmlautRentedHeapConverter();
     }
 
     [Benchmark(Baseline = true)] // baseline comparison
-    public string SimpleConverter()
+    public string[] SimpleConverter()
     {
         var result = _input.Select(word => _simpleConverter.Convert(word)).ToArray();
-        return "";
+        return result;
     } 
 
     [Benchmark]
-    public string ArrayConverter()
+    public string[] ArrayConverter()
     {
         var result = _input.Select(word => _arrayConverter.Convert(word)).ToArray();
-        return "";
+        return result;
     } 
 
     [Benchmark]
-    public string StackAllocConverter() 
+    public string[] StackAllocConverter() 
     {
         var result = _input.Select(word => _stackAllocConverter.Convert(word)).ToArray();
-        return "";
+        return result;
     } 
 
     [Benchmark]
-    public string RentedHeapConverter()
+    public string[] RentedHeapConverter()
     {
         var result = _input.Select(word => _rentedHeapConverter.Convert(word)).ToArray();
-        return "";
+        return result;
     } 
 
     [Benchmark]
-    public string StackAllocOrRentedHeapConverter()
+    public string[] StackAllocOrRentedHeapConverter()
     {
         var result = _input.Select(word => _stackAllocOrRentedHeapConverter.Convert(word)).ToArray();
-        return "";
+        return result;
     } 
 
     [Benchmark]
-    public string StringCreateConverter()
+    public string[] StringCreateConverter()
     {
         var result = _input.Select(word => _stringCreateConverter.Convert(word)).ToArray();
-        return "";
+        return result;
     }
 
+    [Benchmark]
+    public string[] StringCreateOnePassConverter()
+    {
+        var result = _input.Select(word => _stringCreateConverterOnePass.Convert(word)).ToArray();
+        return result;
+    }
 }

@@ -14,6 +14,7 @@ namespace Samwin.UmlautConverterLib.Step1.Tests
             yield return new object[] { new UmlautRentedHeapConverter() };
             yield return new object[] { new UmlautStackAllocOrRentedHeapConverter() };
             yield return new object[] { new UmlautStringCreateConverter() };
+            yield return new object[] { new UmlautStringCreateOnePassConverter() };
         }
 
         [Theory]

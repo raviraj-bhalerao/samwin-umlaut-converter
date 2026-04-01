@@ -14,6 +14,7 @@ public class UmlautConverterLongTextBenchmark
     // private UmlautStackAllocConverter _stackAllocConverter = null!;
     private UmlautArrayConverter _arrayConverter = null!;
     private UmlautStringCreateConverter _stringCreateConverter = null!;
+    private UmlautStringCreateOnePassConverter _stringCreateOnePassConverter = null!;
     private UmlautStackAllocOrRentedHeapConverter _stackAllocOrRentedHeapConverter = null!;
     private UmlautRentedHeapConverter _rentedHeapConverter = null!;
 
@@ -35,6 +36,7 @@ public class UmlautConverterLongTextBenchmark
         // _stackAllocConverter = new UmlautStackAllocConverter(); // Not suitable for very large input due to stack overflow risk
         _arrayConverter = new UmlautArrayConverter();
         _stringCreateConverter = new UmlautStringCreateConverter();
+        _stringCreateOnePassConverter = new UmlautStringCreateOnePassConverter();
         _stackAllocOrRentedHeapConverter = new UmlautStackAllocOrRentedHeapConverter();
         _rentedHeapConverter = new UmlautRentedHeapConverter();
     }
@@ -56,4 +58,6 @@ public class UmlautConverterLongTextBenchmark
     [Benchmark]
     public string StringCreateConverter() => _stringCreateConverter.Convert(_input);
 
+    [Benchmark]
+    public string StringCreateOnePassConverter() => _stringCreateConverter.Convert(_input);
 }
