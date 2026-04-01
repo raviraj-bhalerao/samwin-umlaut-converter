@@ -21,16 +21,30 @@ namespace Samwin.UmlautConverter.Api
 
             var activitySource = new ActivitySource("Samwin.UmlautConverter");
             IHost hostToRun;
+            Logger logger;
             using (var activity = activitySource.StartActivity("AppStartup"))
             {
                 SetEnvironmentVariables();
                 // NLog: setup the logger first to catch all errors
-                var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
+                logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
 
                 try
                 {
                     logger.Debug("init main");
                     hostToRun = CreateHostBuilder(args).Build();
+                }
+                catch (Exception exception)
+                {
+                    // NLog: catch setup errors
+                    logger.Error(exception, "Stopped program because of host build error");
+                    throw;
+                }
+            }
+            if (hostToRun != null)
+            {
+                try
+                {
+                    await hostToRun.RunAsync();
                 }
                 catch (Exception exception)
                 {
@@ -44,10 +58,6 @@ namespace Samwin.UmlautConverter.Api
                     // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
                     LogManager.Flush();
                 }
-            }
-            if(hostToRun != null)
-            {
-                await hostToRun.RunAsync();
             }
         }
 

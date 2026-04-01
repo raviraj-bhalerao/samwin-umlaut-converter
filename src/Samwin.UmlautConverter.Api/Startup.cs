@@ -16,6 +16,10 @@ using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using Samwin.UmlautConverter.Api.Settings;
+using Samwin.UmlautConverterLib.Step2;
+using Samwin.UmlautConverterLib.Step3;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Linq;
 
 namespace Samwin.UmlautConverter.Api
 {
@@ -44,6 +48,11 @@ namespace Samwin.UmlautConverter.Api
             services.AddScoped<ICreateTokenService, TokenGeneratorService>();
             services.AddSingleton<IActivityService, ActivityService>();
             services.AddSingleton<MetricsService>();
+            services.AddSingleton<IMessageBusClient, MessageBusClient>();
+            services.AddTransient<IVariationGenerator, BranchingVariationBufferGenerator>();
+            services.AddTransient<ISqlQueryGenerator<SqlQuery>, ParameterizedSqlGenerator>();
+
+            services.AddHostedService<QueueConsumerService>();
 
             services.AddOpenTelemetry()
                 .ConfigureResource(r => r.AddService("samwin-umlaut-converter-api"))

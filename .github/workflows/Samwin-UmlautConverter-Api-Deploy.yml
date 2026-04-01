@@ -53,6 +53,8 @@ jobs:
           GRAFANA_LOKI_INSTANCE_ID: ${{ vars.GRAFANA_LOKI_INSTANCE_ID }}
           GRAFANA_OTLP_ENDPOINT: ${{ vars.GRAFANA_OTLP_ENDPOINT }}
           GRAFANA_OTLP_INSTANCE_ID: ${{ vars.GRAFANA_OTLP_INSTANCE_ID }}
+          RABBIT_MQ_URI: ${{ secrets.RABBIT_MQ_URI }}
+
         run: |
           jq -n \
             --arg jwtTokenKey "$TOKEN_KEY" \
@@ -70,7 +72,8 @@ jobs:
                {key: "GRAFANA_OTLP_ENDPOINT", value: $grafanaOtlpEndpoint}, 
                {key: "GRAFANA_OTLP_INSTANCE_ID", value: $grafanaOtlpInstanceID},
                {key: "GRAFANA_LOKI_ENDPOINT", value: $grafanaLokiEndpoint}, 
-               {key: "GRAFANA_LOKI_INSTANCE_ID", value: $grafanaLokiInstanceID} ]' > env_vars.json
+               {key: "GRAFANA_LOKI_INSTANCE_ID", value: $grafanaLokiInstanceID},
+               {key: "RABBIT_MQ_URI", value: $RABBIT_MQ_URI} ]' > env_vars.json
 
           curl -X PUT "https://api.render.com/v1/services/$RENDER_SERVICE_ID/env-vars" \
             -H "Authorization: Bearer $RENDER_API_KEY" \
