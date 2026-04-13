@@ -292,7 +292,7 @@ var assemblies = [
     "classes": [
       { "name": "Samwin.UmlautConverter.Api.Controllers.AuthController", "rp": "Samwin.UmlautConverter.Api_AuthController.html", "cl": 37, "ucl": 0, "cal": 37, "tl": 120, "cb": 6, "tb": 6, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverter.Api.Models.WeatherUpdateMessage", "rp": "Samwin.UmlautConverter.Api_WeatherUpdateMessage.html", "cl": 0, "ucl": 5, "cal": 5, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Samwin.UmlautConverter.Api.Services.MessageBusClient", "rp": "Samwin.UmlautConverter.Api_MessageBusClient.html", "cl": 0, "ucl": 104, "cal": 104, "tl": 172, "cb": 0, "tb": 24, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Samwin.UmlautConverter.Api.Services.MessageBusClient", "rp": "Samwin.UmlautConverter.Api_MessageBusClient.html", "cl": 0, "ucl": 128, "cal": 128, "tl": 202, "cb": 0, "tb": 38, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverter.Api.Services.MetricsService", "rp": "Samwin.UmlautConverter.Api_MetricsService.html", "cl": 12, "ucl": 3, "cal": 15, "tl": 28, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverter.Api.Services.QueueConsumerService", "rp": "Samwin.UmlautConverter.Api_QueueConsumerService.html", "cl": 0, "ucl": 18, "cal": 18, "tl": 54, "cb": 0, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Samwin.UmlautConverter.Api.Services.TokenGeneratorService", "rp": "Samwin.UmlautConverter.Api_TokenGeneratorService.html", "cl": 25, "ucl": 0, "cal": 25, "tl": 58, "cb": 4, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -344,13 +344,13 @@ var riskHotspots = [
       { "value": 12, "exceeded": false },
     ]},
   {
-    "assembly": "Samwin.UmlautConverter.Api", "class": "Samwin.UmlautConverter.Api.Services.MessageBusClient", "reportPath": "Samwin.UmlautConverter.Api_MessageBusClient.html", "methodName": "GetChannelAsync()", "methodShortName": "GetChannelAsync()", "fileIndex": 0, "line": 50,
+    "assembly": "Samwin.UmlautConverter.Api", "class": "Samwin.UmlautConverter.Api.Services.MessageBusClient", "reportPath": "Samwin.UmlautConverter.Api_MessageBusClient.html", "methodName": "GetChannelAsync()", "methodShortName": "GetChannelAsync()", "fileIndex": 0, "line": 55,
     "metrics": [
       { "value": 110, "exceeded": true },
       { "value": 10, "exceeded": false },
     ]},
   {
-    "assembly": "Samwin.UmlautConverter.Api", "class": "Samwin.UmlautConverter.Api.Services.MessageBusClient", "reportPath": "Samwin.UmlautConverter.Api_MessageBusClient.html", "methodName": "<ConsumeMessagesAsync()", "methodShortName": "<ConsumeMessagesAsync()", "fileIndex": 0, "line": 116,
+    "assembly": "Samwin.UmlautConverter.Api", "class": "Samwin.UmlautConverter.Api.Services.MessageBusClient", "reportPath": "Samwin.UmlautConverter.Api_MessageBusClient.html", "methodName": "<ConsumeMessagesAsync()", "methodShortName": "<ConsumeMessagesAsync()", "fileIndex": 0, "line": 135,
     "metrics": [
       { "value": 72, "exceeded": true },
       { "value": 8, "exceeded": false },
