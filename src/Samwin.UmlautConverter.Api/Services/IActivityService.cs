@@ -3,6 +3,6 @@ namespace Samwin.UmlautConverter.Api.Services
 {
     public interface IActivityService
     {
-        Activity? StartActivity(string name, ActivityKind kind = ActivityKind.Internal);
+        Activity? StartActivity(string name, ActivityKind kind = ActivityKind.Internal, ActivityContext parentContext = default);
     }
 }

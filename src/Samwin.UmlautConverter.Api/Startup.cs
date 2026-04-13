@@ -60,6 +60,7 @@ namespace Samwin.UmlautConverter.Api
                 .WithTracing(tracing => tracing
                     .AddSource("samwin-umlaut-converter-api")
                     .AddAspNetCoreInstrumentation()
+                    .AddRabbitMQInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddOtlpExporter(o =>
                     {
@@ -78,6 +79,7 @@ namespace Samwin.UmlautConverter.Api
                 .WithMetrics(metrics => metrics
                     .AddMeter(MetricsService.MeterName, MetricsService.MeterDescription)
                     .AddAspNetCoreInstrumentation()
+                    .AddMeter("RabbitMQ.Client")
                     .AddRuntimeInstrumentation()
                     .AddProcessInstrumentation()
                     .AddOtlpExporter(o =>

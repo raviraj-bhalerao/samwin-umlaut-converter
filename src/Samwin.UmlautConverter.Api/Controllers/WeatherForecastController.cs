@@ -94,6 +94,11 @@ namespace Samwin.UmlautConverter.Api.Controllers
             try
             {
                 await _messageBusClient.PublishMessageAsync(inputs);
+                var operationId = Guid.NewGuid().ToString();
+                using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "QueueMsg" }, { "OperationId", operationId } }))
+                {
+                    await _messageBusClient.PublishMessageAsync(inputs);
+                }
             }
             catch (Exception ex)
             {

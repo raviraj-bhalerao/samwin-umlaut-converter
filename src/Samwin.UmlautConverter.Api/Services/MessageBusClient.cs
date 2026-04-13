@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -13,6 +15,8 @@ using Samwin.UmlautConverterLib.Step3;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 
 namespace Samwin.UmlautConverter.Api.Services
 {
@@ -30,6 +34,7 @@ namespace Samwin.UmlautConverter.Api.Services
         private readonly SemaphoreSlim _connectionLock = new(1, 1);
         private readonly ConnectionFactory _factory;
         private readonly IActivityService _activityService;
+        private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
         public event EventHandler<string>? MessageReceived;
 
@@ -67,7 +72,7 @@ namespace Samwin.UmlautConverter.Api.Services
 
         public async Task PublishMessageAsync<T>(T message)
         {
-            using (var publishMessageActivity = _activityService.StartActivity("PublishMessage"))
+            using (var publishMessageActivity = _activityService.StartActivity("PublishMessage", ActivityKind.Producer))
             {
                 using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "PublishMessageAsync" } }))
                 {
@@ -81,15 +86,28 @@ namespace Samwin.UmlautConverter.Api.Services
                         autoDelete: false,
                         arguments: null);
 
+                    var properties = new BasicProperties
+                    {
+                        Persistent = true,
+                        Headers = new Dictionary<string, object?>()
+                    };
+
+                    // Inject the current Activity context into the message headers for distributed tracing
+                    Propagator.Inject(new PropagationContext(Activity.Current?.Context ?? default, Baggage.Current), properties.Headers, (headers, key, value) =>
+                    {
+                        headers[key] = value;
+                    });
+
                     // 2. Prepare the message
                     var messageBody = JsonSerializer.Serialize(message);
                     var body = Encoding.UTF8.GetBytes(messageBody);
 
-                    // 3. Publish to the Default Exchange
-                    // Note: exchange is empty string "", and routingKey MUST match the queue name
+                    // 3. Publish with basicProperties containing our trace context
                     await channel.BasicPublishAsync(
                         exchange: string.Empty,
                         routingKey: _queueName,
+                        mandatory: false,
+                        basicProperties: properties,
                         body: body);
                     _logger.LogInformation("Message published: {Message}", messageBody);
                 }
@@ -113,35 +131,47 @@ namespace Samwin.UmlautConverter.Api.Services
             {
                 try
                 {
+                    // Extract the Activity context from the message headers
+                    var parentContext = Propagator.Extract(default, ea.BasicProperties.Headers, (headers, key) =>
+                    {
+                        if (headers != null && headers.TryGetValue(key, out var value))
+                        {
+                            // Headers are often byte arrays in RabbitMQ
+                            var stringValue = value is byte[] bytes ? Encoding.UTF8.GetString(bytes) : value?.ToString();
+                            return stringValue != null ? new[] { stringValue } : Enumerable.Empty<string>();
+                        }
+                        return Enumerable.Empty<string>();
+                    });
+
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
                     var inputs = JsonSerializer.Deserialize<string[]>(message);
 
                     if (inputs != null)
                     {
-                        using (var receiveMessageActivity = _activityService.StartActivity("ReceiveMessage"))
+                        using (var receiveMessageActivity = _activityService.StartActivity("ReceiveMessage", ActivityKind.Consumer, parentContext.ActivityContext))
                         {
                             using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "ReceivedMessage" } }))
                             {
                                 _logger.LogInformation("Messages received and acknowledged: {Message}", inputs.Length);
 
-                                ISqlQueryGenerator<SqlQuery> sqlQueryGenerator;
                                 using (IServiceScope scope = _scopeFactory.CreateScope())
                                 {
                                     _metricsService.TokensConverted.Add(inputs.Length);
-                                    sqlQueryGenerator = scope.ServiceProvider.GetRequiredService<ISqlQueryGenerator<SqlQuery>>();
-                                }
-                                foreach (var input in inputs)
-                                {
-                                    var sqlQueries = sqlQueryGenerator.Generate([input]);
-                                    _metricsService.QueriesGenerated.Add(sqlQueries.Count());
-                                    foreach (var sqlQuery in sqlQueries)
+                                    var sqlQueryGenerator = scope.ServiceProvider.GetRequiredService<ISqlQueryGenerator<SqlQuery>>();
+                                    
+                                    foreach (var input in inputs)
                                     {
-                                        using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "PublishQuery" } }))
+                                        var sqlQueries = sqlQueryGenerator.Generate([input]);
+                                        _metricsService.QueriesGenerated.Add(sqlQueries.Count());
+                                        foreach (var sqlQuery in sqlQueries)
                                         {
-                                            _metricsService.VariationsCreated.Add(sqlQuery.Parameters.Count());
+                                            using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "PublishQuery" } }))
+                                            {
+                                                _metricsService.VariationsCreated.Add(sqlQuery.Parameters.Count());
                                             await Task.Delay(TimeSpan.FromSeconds(10));
                                             MessageReceived?.Invoke(this, sqlQuery.ToQueryString());
+                                            }
                                         }
                                     }
                                 }

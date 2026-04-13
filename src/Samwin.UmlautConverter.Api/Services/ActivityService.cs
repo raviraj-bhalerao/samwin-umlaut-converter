@@ -12,9 +12,9 @@ namespace Samwin.UmlautConverter.Api.Services
             _activitySource = new ActivitySource("samwin-umlaut-converter-api");
         }
 
-        public Activity? StartActivity(string name, ActivityKind kind = ActivityKind.Internal)
+        public Activity? StartActivity(string name, ActivityKind kind = ActivityKind.Internal, ActivityContext parentContext = default)
         {
-            return _activitySource.StartActivity(name, kind);
+            return _activitySource.StartActivity(name, kind, parentContext);
         }
     }
 }
