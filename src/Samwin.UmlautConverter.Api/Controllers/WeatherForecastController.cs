@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Net.ServerSentEvents;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using System.Diagnostics;
 
 namespace Samwin.UmlautConverter.Api.Controllers
 {
@@ -111,8 +112,11 @@ namespace Samwin.UmlautConverter.Api.Controllers
         }
         private async IAsyncEnumerable<SseItem<string>> getVariations([EnumeratorCancellation] CancellationToken clientDisconnectedToken)
         {
-            var channel = Channel.CreateUnbounded<string>();
-            void Handler(object? sender, string msg) => channel.Writer.TryWrite(msg.ToString());
+            var channel = Channel.CreateUnbounded<(string msg, ActivityContext context)>();
+            void Handler(object? sender, (string Message, ActivityContext Context) data)
+            {
+                channel.Writer.TryWrite(data);
+            }
             _messageBusClient.MessageReceived += Handler;
             try
             {
@@ -123,12 +127,13 @@ namespace Samwin.UmlautConverter.Api.Controllers
 
                     // 2. Link it with the client's disconnect token
                     using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(clientDisconnectedToken, timeoutCts.Token);
+                    using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "ReceivedMessage" } })) ;
 
-                    string? message;
+                    (string Message, ActivityContext Context)? item;
                     try
                     {
                         // 3. Wait for the next item from the channel using the linked token
-                        message = await channel.Reader.ReadAsync(linkedCts.Token);
+                        item = await channel.Reader.ReadAsync(linkedCts.Token);
                     }
                     catch (OperationCanceledException)
                     {
@@ -143,11 +148,12 @@ namespace Samwin.UmlautConverter.Api.Controllers
                         yield break; // Exit the stream
                     }
 
+                    _logger.LogInformation($"Query received and acknowledged: {item}");
                     // 4. If we reach here, we received a message. 
                     // The 'using' block ends, the old timeout is disposed, 
                     // and the loop restarts, creating a fresh 30s timeout.
-                    _logger.LogDebug($"[Log] Sending input to client: {message}");
-                    yield return new SseItem<string>($"{message}\n\n", eventType: "data");
+                    _logger.LogDebug($"[Log] Sending input to client: {item}");
+                    yield return new SseItem<string>($"{item.Value.Message}", eventType: "query");
                 }
             }
             finally

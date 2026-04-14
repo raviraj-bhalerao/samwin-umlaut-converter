@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Samwin.UmlautConverter.Api.Models;
@@ -12,6 +13,6 @@ namespace Samwin.UmlautConverter.Api.Services
     {
         Task PublishMessageAsync<T>(T message);
         Task ConsumeMessagesAsync(CancellationToken cancellationToken);
-        event EventHandler<string>? MessageReceived;
+        event EventHandler<(string Message, ActivityContext Context)>? MessageReceived;
     }
 }

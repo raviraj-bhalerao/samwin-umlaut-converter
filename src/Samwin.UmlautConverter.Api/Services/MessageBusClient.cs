@@ -36,7 +36,7 @@ namespace Samwin.UmlautConverter.Api.Services
         private readonly IActivityService _activityService;
         private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
-        public event EventHandler<string>? MessageReceived;
+        public event EventHandler<(string Message, ActivityContext Context)>? MessageReceived;
 
         public MessageBusClient(IServiceScopeFactory scopeFactory, MetricsService metricsService, ILogger<MessageBusClient> logger, IActivityService activityService)
         {
@@ -74,7 +74,7 @@ namespace Samwin.UmlautConverter.Api.Services
         {
             using (var publishMessageActivity = _activityService.StartActivity("PublishMessage", ActivityKind.Producer))
             {
-                using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "PublishMessageAsync" } }))
+                using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "Publish Message To Queue" } }))
                 {
                     var channel = await GetChannelAsync();
 
@@ -170,7 +170,7 @@ namespace Samwin.UmlautConverter.Api.Services
                                             {
                                                 _metricsService.VariationsCreated.Add(sqlQuery.Parameters.Count());
                                             await Task.Delay(TimeSpan.FromSeconds(10));
-                                            MessageReceived?.Invoke(this, sqlQuery.ToQueryString());
+                                            MessageReceived?.Invoke(this, (sqlQuery.ToQueryString(), receiveMessageActivity!.Context));
                                             }
                                         }
                                     }
