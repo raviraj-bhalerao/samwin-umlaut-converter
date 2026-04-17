@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Samwin.UmlautConverter.Api.Services;
+using Samwin.UmlautConverter.Api.Services.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -14,6 +14,7 @@ using System.Net.ServerSentEvents;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Diagnostics;
+using Samwin.UmlautConverter.Api.Services.Telemetry;
 
 namespace Samwin.UmlautConverter.Api.Controllers
 {
@@ -29,11 +30,14 @@ namespace Samwin.UmlautConverter.Api.Controllers
         };
         private readonly ILogger<WeatherForecastController> _logger;
         private readonly IMessageBusClient _messageBusClient;
+        private readonly MetricsService _metricsService;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IMessageBusClient messageBusClient)
+        public WeatherForecastController(IMessageBusClient messageBusClient, MetricsService metricsService
+                                        , ILogger<WeatherForecastController> logger)
         {
-            _logger = logger;
             _messageBusClient = messageBusClient;
+            _metricsService = metricsService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -47,7 +51,7 @@ namespace Samwin.UmlautConverter.Api.Controllers
                 return toRet;
             }
         }
-        [HttpGet("secure")]
+        [HttpGet("SecureGet")]
         [Authorize]
         public WeatherForecast[] SecureGet()
         {
@@ -71,10 +75,9 @@ namespace Samwin.UmlautConverter.Api.Controllers
                 .ToArray();
         }
 
-        [HttpGet("heart")]
-        public async Task<ServerSentEventsResult<string>> GetHeart(CancellationToken cancellationToken)
+        [HttpGet("GetHeartBeat")]
+        public async Task<ServerSentEventsResult<string>> GetHeartBeat(CancellationToken cancellationToken)
         {
-
             return TypedResults.ServerSentEvents(Beats(cancellationToken));
         }
         private async IAsyncEnumerable<SseItem<string>> Beats([EnumeratorCancellation] CancellationToken token)
@@ -92,13 +95,14 @@ namespace Samwin.UmlautConverter.Api.Controllers
             [FromQuery(Name = "input")] string[] inputs,
             CancellationToken clientDisconnectedToken) // Automatically bound to the request lifetime
         {
+            var consumerId = Guid.NewGuid();
             try
             {
-                await _messageBusClient.PublishMessageAsync(inputs);
+                await _messageBusClient.PublishMessageAsync(consumerId, inputs);
                 var operationId = Guid.NewGuid().ToString();
                 using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "QueueMsg" }, { "OperationId", operationId } }))
                 {
-                    await _messageBusClient.PublishMessageAsync(inputs);
+                    await _messageBusClient.PublishMessageAsync(consumerId, inputs);
                 }
             }
             catch (Exception ex)
@@ -106,18 +110,18 @@ namespace Samwin.UmlautConverter.Api.Controllers
                 _logger.LogError(ex, "Failed to publish message to message bus.");
             }
 
-            return TypedResults.ServerSentEvents(getVariations(clientDisconnectedToken));
+            return TypedResults.ServerSentEvents(getVariations(consumerId, clientDisconnectedToken));
 
 
         }
-        private async IAsyncEnumerable<SseItem<string>> getVariations([EnumeratorCancellation] CancellationToken clientDisconnectedToken)
+        private async IAsyncEnumerable<SseItem<string>> getVariations(Guid consumerId, [EnumeratorCancellation] CancellationToken clientDisconnectedToken)
         {
-            var channel = Channel.CreateUnbounded<(string msg, ActivityContext context)>();
-            void Handler(object? sender, (string Message, ActivityContext Context) data)
+            var channel = Channel.CreateUnbounded<(string input, string qry, ActivityContext context)>();
+            void Handler(object? sender, (string input, string qry, ActivityContext Context) data)
             {
                 channel.Writer.TryWrite(data);
             }
-            _messageBusClient.MessageReceived += Handler;
+            _messageBusClient.AddConsumerMessageReceivedHandler(consumerId, Handler);
             try
             {
                 while (true)
@@ -129,7 +133,7 @@ namespace Samwin.UmlautConverter.Api.Controllers
                     using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(clientDisconnectedToken, timeoutCts.Token);
                     using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "ReceivedMessage" } })) ;
 
-                    (string Message, ActivityContext Context)? item;
+                    (string Input, string Query, ActivityContext Context)? item;
                     try
                     {
                         // 3. Wait for the next item from the channel using the linked token
@@ -153,12 +157,12 @@ namespace Samwin.UmlautConverter.Api.Controllers
                     // The 'using' block ends, the old timeout is disposed, 
                     // and the loop restarts, creating a fresh 30s timeout.
                     _logger.LogDebug($"[Log] Sending input to client: {item}");
-                    yield return new SseItem<string>($"{item.Value.Message}", eventType: "query");
+                    yield return new SseItem<string>($"{item.Value.Query}", eventType: "query");
                 }
             }
             finally
             {
-                _messageBusClient.MessageReceived -= Handler;
+                _messageBusClient.RemoveConsumerMessageReceivedHandler(consumerId, Handler);
                 channel.Writer.TryComplete();
             }
         }

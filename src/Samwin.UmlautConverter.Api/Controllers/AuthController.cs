@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Samwin.UmlautConverter.Api.Services;
+using Samwin.UmlautConverter.Api.Services.Jwt;
+using Samwin.UmlautConverter.Api.Services.Telemetry;
 namespace Samwin.UmlautConverter.Api.Controllers
 {
     [ApiController]
@@ -30,11 +31,6 @@ namespace Samwin.UmlautConverter.Api.Controllers
         [HttpPost(nameof(GoogleLogin))]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
         {
-            _metricsService.RequestCounter.Add(1, new TagList
-            {
-                {"endpoint", nameof(GoogleLogin)}
-            });
-
             using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "GoogleLogin" }, { "OperationId", Guid.NewGuid() } }))
             {
                 _metricsService.LoginAttempts.Add(1, new TagList
@@ -58,10 +54,6 @@ namespace Samwin.UmlautConverter.Api.Controllers
         [HttpPost(nameof(LoginWithPassword))]
         public async Task<IActionResult> LoginWithPassword([FromBody] LoginRequest request)
         {
-            _metricsService.RequestCounter.Add(1, new TagList
-            {
-                {"endpoint", nameof(LoginWithPassword)}
-            });
             var users = new List<UserRecord>
             {
                 new UserRecord("bhaleraor", "bhaleraor@1234", new[] { "TechCaptain", "Administrator" }),

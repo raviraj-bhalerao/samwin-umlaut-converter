@@ -9,16 +9,14 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Threading;
 using Microsoft.Extensions.Logging;
-using Samwin.UmlautConverter.Api.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Samwin.UmlautConverterLib.Step3;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
+using Samwin.UmlautConverter.Api.Services.Telemetry;
 
-namespace Samwin.UmlautConverter.Api.Services
+namespace Samwin.UmlautConverter.Api.Services.Messaging
 {
     /// <summary>
     /// A RabbitMQ client implementation using the modern asynchronous API.
@@ -36,7 +34,46 @@ namespace Samwin.UmlautConverter.Api.Services
         private readonly IActivityService _activityService;
         private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
-        public event EventHandler<(string Message, ActivityContext Context)>? MessageReceived;
+        private readonly Dictionary<Guid, EventHandler<(string Input, string Query, ActivityContext Context)>> _consumerMessageReceivedHandlers = new();
+
+        private record MessageEnvelope<T>(Guid ConsumerId, T Inputs);
+
+        public void AddConsumerMessageReceivedHandler(Guid consumerId, EventHandler<(string Input, string Query, ActivityContext Context)> handler)
+        {
+            if (!_consumerMessageReceivedHandlers.TryGetValue(consumerId, out var existingHandler))
+            {
+                _consumerMessageReceivedHandlers.Add(consumerId, handler);
+            }
+            else
+            {
+                existingHandler += handler;
+                _consumerMessageReceivedHandlers[consumerId] = existingHandler;
+            }
+        }
+
+        public void RemoveConsumerMessageReceivedHandler(Guid consumerId, EventHandler<(string Input, string Query, ActivityContext Context)> handler)
+        {
+            if (_consumerMessageReceivedHandlers.TryGetValue(consumerId, out var existingHandler))
+            {
+                existingHandler -= handler;
+                if (existingHandler is null)
+                {
+                    _consumerMessageReceivedHandlers.Remove(consumerId);
+                }
+                else
+                {
+                    _consumerMessageReceivedHandlers[consumerId] = existingHandler;
+                }
+            }
+        }
+
+        private void RaiseMessageReceivedEvent(Guid consumerId, string input, string query, ActivityContext context)
+        {
+            if (_consumerMessageReceivedHandlers.TryGetValue(consumerId, out var handler))
+            {
+                handler?.Invoke(this, (input, query, context));
+            }
+        }
 
         public MessageBusClient(IServiceScopeFactory scopeFactory, MetricsService metricsService, ILogger<MessageBusClient> logger, IActivityService activityService)
         {
@@ -70,7 +107,7 @@ namespace Samwin.UmlautConverter.Api.Services
             }
         }
 
-        public async Task PublishMessageAsync<T>(T message)
+        public async Task PublishMessageAsync<T>(Guid consumerId, T message)
         {
             using (var publishMessageActivity = _activityService.StartActivity("PublishMessage", ActivityKind.Producer))
             {
@@ -99,7 +136,7 @@ namespace Samwin.UmlautConverter.Api.Services
                     });
 
                     // 2. Prepare the message
-                    var messageBody = JsonSerializer.Serialize(message);
+                    var messageBody = JsonSerializer.Serialize(new MessageEnvelope<T> (ConsumerId : consumerId, Inputs : message ));
                     var body = Encoding.UTF8.GetBytes(messageBody);
 
                     // 3. Publish with basicProperties containing our trace context
@@ -144,23 +181,23 @@ namespace Samwin.UmlautConverter.Api.Services
                     });
 
                     var body = ea.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body);
-                    var inputs = JsonSerializer.Deserialize<string[]>(message);
+                    var messageBody = Encoding.UTF8.GetString(body);
+                    var message = JsonSerializer.Deserialize<MessageEnvelope<string[]>>(messageBody);
 
-                    if (inputs != null)
+                    if  (message != null && message.ConsumerId != default(Guid) && message.Inputs != null)
                     {
                         using (var receiveMessageActivity = _activityService.StartActivity("ReceiveMessage", ActivityKind.Consumer, parentContext.ActivityContext))
                         {
                             using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "ReceivedMessage" } }))
                             {
-                                _logger.LogInformation("Messages received and acknowledged: {Message}", inputs.Length);
+                                _logger.LogInformation($"# of Inputs received and acknowledged: {message.Inputs.Length}");
 
                                 using (IServiceScope scope = _scopeFactory.CreateScope())
                                 {
-                                    _metricsService.TokensConverted.Add(inputs.Length);
+                                    _metricsService.TokensConverted.Add(message.Inputs.Length);
                                     var sqlQueryGenerator = scope.ServiceProvider.GetRequiredService<ISqlQueryGenerator<SqlQuery>>();
-                                    
-                                    foreach (var input in inputs)
+
+                                    foreach (var input in message.Inputs)
                                     {
                                         var sqlQueries = sqlQueryGenerator.Generate([input]);
                                         _metricsService.QueriesGenerated.Add(sqlQueries.Count());
@@ -169,8 +206,8 @@ namespace Samwin.UmlautConverter.Api.Services
                                             using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "PublishQuery" } }))
                                             {
                                                 _metricsService.VariationsCreated.Add(sqlQuery.Parameters.Count());
-                                            await Task.Delay(TimeSpan.FromSeconds(10));
-                                            MessageReceived?.Invoke(this, (sqlQuery.ToQueryString(), receiveMessageActivity!.Context));
+                                                await Task.Delay(TimeSpan.FromSeconds(10));
+                                                this.RaiseMessageReceivedEvent(message.ConsumerId, input, sqlQuery.ToQueryString(), receiveMessageActivity!.Context);
                                             }
                                         }
                                     }
@@ -198,5 +235,6 @@ namespace Samwin.UmlautConverter.Api.Services
             _connectionLock.Dispose();
             GC.SuppressFinalize(this);
         }
+
     }
 }

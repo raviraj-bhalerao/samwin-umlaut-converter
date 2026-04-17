@@ -91,25 +91,291 @@ This ensures:
 
 ---
 
-### 2.4 Metrics
+# 2.4 Metrics
 
-Use `MetricsService` for all metrics.
+Use `MetricsService` for all application metrics.
 
-**Examples:**
+Metrics provide insight into **system behavior, performance, and efficiency**.
+
+---
+
+## 2.4.1 Metric Types
+
+### Counters
+
+Used for **monotonically increasing values** (event counts).
 
 ```csharp
-_metricsService.RequestCounter.Add(1);
-_metricsService.LoginAttempts.Add(1, new TagList { { "result", "success" } });
+_metricsService.TokensConverted.Add(1);
+```
+
+---
+
+### Histograms
+
+Used for **durations and distributions**.
+
+```csharp
 _metricsService.JwtGenerationTime.Record(duration);
 ```
 
-**Guidelines:**
+---
 
-* Use **Counters** for counts
-* Use **Histogram** for durations
-* Always add tags for meaningful segmentation
+## 2.4.2 Request Metrics (Middleware-Based)
+
+Request metrics are handled centrally via `MetricsMiddleware`.
+
+### Behavior:
+
+* Automatically records **one metric per HTTP request**
+* Captures:
+
+  * `endpoint` → resolved from endpoint metadata
+  * `status_code` → HTTP response status
+* Executed after request processing (including failures)
 
 ---
+
+### Implementation:
+
+```csharp
+app.UseMiddleware<MetricsMiddleware>();
+```
+
+---
+
+### Metric Structure:
+
+```csharp
+_metricsService.RequestCounter.Add(1, new TagList
+{
+    { "endpoint", endpointName },
+    { "status_code", context.Response.StatusCode }
+});
+```
+
+---
+
+### Guidelines:
+
+* ❌ Do NOT add request counters inside controllers
+* ❌ Do NOT duplicate request metrics in services
+* ✔ Request counting is handled **only via middleware**
+* ✔ Ensures consistent and complete coverage across all endpoints
+
+---
+
+### Endpoint Naming:
+
+* Use `[EndpointName("MeaningfulName")]` when clarity is needed
+* Otherwise, `DisplayName` is used as fallback
+
+---
+
+### Design Principle:
+
+> Cross-cutting concerns like request metrics must be handled centrally, not in business logic.
+
+---
+
+## 2.4.3 Cache Metrics (Hit / Miss Guidelines)
+
+Cache metrics measure **system efficiency and load reduction**.
+
+---
+
+### Definitions:
+
+* **Cache Hit** → Data served from cache (no external processing)
+* **Cache Miss** → Data not in cache (requires queue / processing)
+
+---
+
+### Usage Guidelines:
+
+* Record **exactly one event per evaluated input**
+* A single input must result in either:
+
+  * `CacheHit`
+  * `CacheMiss`
+* Never record both for the same input
+
+---
+
+### Example:
+
+```csharp
+if (_cache.TryGetValue(key, out var value))
+{
+    _metricsService.RecordCacheHit();
+}
+else
+{
+    _metricsService.RecordCacheMiss();
+}
+```
+
+---
+
+### Important Rules:
+
+* Record metrics **at decision point**, not after processing
+* Do NOT record multiple times for the same input
+* Metrics must reflect **decision**, not outcome
+
+---
+
+### Interpretation:
+
+```
+Cache Hit Ratio = CacheHits / (CacheHits + CacheMisses)
+```
+
+---
+
+### Design Notes:
+
+* Metrics are recorded per **unique input**
+* When using deduplication (`Distinct()`), metrics reflect unique values, not total request size
+
+---
+
+## 2.4.4 Counter Design Guidelines
+
+Counters track **event occurrences across the system**.
+
+---
+
+### Naming Conventions:
+
+* Use **snake_case**
+* Prefix with service/domain
+* Use `_total` suffix for counters
+
+```
+umlaut_converter_requests_total
+umlaut_converter_cache_hits_total
+umlaut_converter_tokens_converted_total
+```
+
+---
+
+### When to Use Counters:
+
+Use counters for:
+
+* Requests (via middleware)
+* Cache hits/misses
+* Messages published/consumed
+* Tokens processed
+* Errors (recommended)
+
+---
+
+### When NOT to Use Counters:
+
+Do NOT use counters for:
+
+* durations → use **Histogram**
+* current values → use **Gauge** (if required)
+* percentages → compute externally (e.g., Grafana)
+
+---
+
+### Increment Strategy:
+
+* Prefer increment by `1` per event
+* Use higher values only when batching:
+
+```csharp
+_metricsService.TokensConverted.Add(tokenCount);
+```
+
+---
+
+## 2.4.5 Tagging Guidelines
+
+Tags provide **metric segmentation and filtering**.
+
+---
+
+### Guidelines:
+
+* Use tags only when necessary
+* Keep values **low cardinality**
+
+---
+
+### ✔ Good Tags:
+
+* `result = hit / miss`
+* `endpoint = convert`
+* `status_code = 200 / 500`
+
+---
+
+### ❌ Bad Tags:
+
+* userId
+* input value
+* requestId
+* any high-cardinality or unique value
+
+---
+
+## 2.4.6 Consistency Rules
+
+* Every feature should include:
+
+  * relevant counters
+  * optional histogram for performance
+
+* Always use `MetricsService`
+
+* Do NOT create ad-hoc meters or duplicate metrics
+
+---
+
+## 2.4.7 Anti-Patterns to Avoid
+
+❌ Duplicating request metrics in controllers
+❌ Missing metrics in new features
+❌ High-cardinality tags
+❌ Using counters for non-count data
+
+---
+
+### Metric Design Anti-Pattern:
+
+❌ Separate counters:
+
+```
+cache_hits
+cache_misses
+```
+
+✔ Preferred (production):
+
+```
+cache_events_total { result = hit / miss }
+```
+
+*(Separate counters are acceptable for demo simplicity)*
+
+---
+
+## 2.4.8 Observability Alignment
+
+Every feature should include:
+
+| Concern | Tool                     |
+| ------- | ------------------------ |
+| Logs    | ILogger                  |
+| Traces  | Activity / OpenTelemetry |
+| Metrics | Counters / Histograms    |
+
+---
+
 
 ## 3. Adding a New API Endpoint
 
@@ -353,7 +619,7 @@ await channel.BasicNackAsync(tag, false, true);
 ### Naming
 
 * Activities: `VerbNoun` (e.g., `GenerateJwt`)
-* Metrics: snake_case (e.g., `no_of_requests`)
+* Metrics: snake_case with domain prefix and suffix (e.g., umlaut_converter_requests_total)
 * Scopes: meaningful business names
 
 ### Consistency

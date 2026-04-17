@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Samwin.UmlautConverter.Api.Services
+namespace Samwin.UmlautConverter.Api.Services.Messaging
 {
     public class QueueConsumerService : BackgroundService
     {

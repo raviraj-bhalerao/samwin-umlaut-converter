@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-namespace Samwin.UmlautConverter.Api.Services
+namespace Samwin.UmlautConverter.Api.Services.Telemetry
 {
     [ExcludeFromCodeCoverage]
     public class ActivityService : IActivityService

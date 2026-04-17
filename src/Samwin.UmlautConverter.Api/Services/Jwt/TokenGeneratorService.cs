@@ -7,7 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Samwin.UmlautConverter.Api.Services
+namespace Samwin.UmlautConverter.Api.Services.Jwt
 {
     /// <summary>
     /// Implements token creation logic using strongly-typed JWT settings.

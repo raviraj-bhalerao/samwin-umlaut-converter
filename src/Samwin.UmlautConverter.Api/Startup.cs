@@ -6,7 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-using Samwin.UmlautConverter.Api.Services;
+using Samwin.UmlautConverter.Api.Services.Jwt;
+using Samwin.UmlautConverter.Api.Services.Messaging;
+using Samwin.UmlautConverter.Api.Services.Telemetry;
+using Samwin.UmlautConverter.Api.Services.UmlautConversion;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -18,8 +21,7 @@ using OpenTelemetry.Metrics;
 using Samwin.UmlautConverter.Api.Settings;
 using Samwin.UmlautConverterLib.Step2;
 using Samwin.UmlautConverterLib.Step3;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace Samwin.UmlautConverter.Api
 {
@@ -45,15 +47,17 @@ namespace Samwin.UmlautConverter.Api
 
             services.AddControllers();
             services.AddDirectoryBrowser();
-            services.AddScoped<ICreateTokenService, TokenGeneratorService>();
+            services.AddTransient<ICreateTokenService, TokenGeneratorService>();
             services.AddSingleton<IActivityService, ActivityService>();
             services.AddSingleton<MetricsService>();
             services.AddSingleton<IMessageBusClient, MessageBusClient>();
             services.AddTransient<IVariationGenerator, BranchingVariationBufferGenerator>();
             services.AddTransient<ISqlQueryGenerator<SqlQuery>, ParameterizedSqlGenerator>();
+            services.AddTransient<IConvertUmlaut, UmlautConversionService>();
 
             services.AddHostedService<QueueConsumerService>();
 
+            services.AddMemoryCache();
             services.AddOpenTelemetry()
                 .ConfigureResource(r => r.AddService("samwin-umlaut-converter-api"))
 
@@ -72,12 +76,25 @@ namespace Samwin.UmlautConverter.Api
                         Console.WriteLine($"Tracing OTLP Header: {o.Headers}");
                     })
 #if DEBUG
-                    .AddConsoleExporter()
+                    // .AddConsoleExporter()
 #endif
                     )
 
                 .WithMetrics(metrics => metrics
                     .AddMeter(MetricsService.MeterName, MetricsService.MeterDescription)
+                    .ConfigureResource(resource =>
+                                {
+                                    resource.AddService(
+                                        serviceName: "samwin-umlaut-converter-api",
+                                        serviceVersion: "1.0.0")
+                                        .AddAttributes(new List<KeyValuePair<string, object>>
+                                        {
+                                            // This will show up as a tag/label in your metrics
+                                            new("server-name", Environment.MachineName),
+                                            // Often used in demos to show the physical or virtual host
+                                            new("host-name", Environment.MachineName) 
+                                        });
+                                })
                     .AddAspNetCoreInstrumentation()
                     .AddMeter("RabbitMQ.Client")
                     .AddRuntimeInstrumentation()
@@ -91,7 +108,7 @@ namespace Samwin.UmlautConverter.Api
                         Console.WriteLine($"Metrics OTLP Header: {o.Headers}");
                     })
 #if DEBUG
-                    .AddConsoleExporter()
+                    // .AddConsoleExporter()
 #endif
                     );
 
@@ -187,7 +204,7 @@ namespace Samwin.UmlautConverter.Api
             });
 
             app.UseRouting();
-
+            app.UseMiddleware<MetricsMiddleware>();
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
