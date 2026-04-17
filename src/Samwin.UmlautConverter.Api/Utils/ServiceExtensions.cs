@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Samwin.UmlautConverter.Api.Services.Telemetry;
 
 namespace Samwin.UmlautConverter.Api.Utils
 {
+    [ExcludeFromCodeCoverage]
     public static class ServiceExtensions
     {
         private const string Result = "result";

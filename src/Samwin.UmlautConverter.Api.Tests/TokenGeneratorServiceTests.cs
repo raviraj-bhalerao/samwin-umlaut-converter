@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using Microsoft.Extensions.Options;
 using Samwin.UmlautConverter.Api.Services;
+using Samwin.UmlautConverter.Api.Services.Jwt;
 using Samwin.UmlautConverter.Api.Settings;
 using Xunit;
 

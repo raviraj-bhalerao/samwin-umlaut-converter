@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Samwin.UmlautConverter.Api.Services.Telemetry;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Samwin.UmlautConverter.Api.Services.Messaging
 {
+    [ExcludeFromCodeCoverage]
     public class MetricsMiddleware
     {
         private readonly RequestDelegate _next;

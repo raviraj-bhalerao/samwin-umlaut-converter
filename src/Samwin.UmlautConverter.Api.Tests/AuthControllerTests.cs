@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Samwin.UmlautConverter.Api.Controllers;
 using Samwin.UmlautConverter.Api.Services;
+using Samwin.UmlautConverter.Api.Services.Jwt;
+using Samwin.UmlautConverter.Api.Services.Telemetry;
 using Xunit;
 
 namespace Samwin.UmlautConverter.Api.Tests.Controllers

@@ -1,6 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 namespace Samwin.UmlautConverter.Api.Services.Telemetry
 {
+    [ExcludeFromCodeCoverage]
     public class MetricsService
     {
         public const string MeterName = "samwin-umlaut-converter-api.Metrics";

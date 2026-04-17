@@ -15,12 +15,14 @@ using System.Linq;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
 using Samwin.UmlautConverter.Api.Services.Telemetry;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Samwin.UmlautConverter.Api.Services.Messaging
 {
     /// <summary>
     /// A RabbitMQ client implementation using the modern asynchronous API.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class MessageBusClient : IMessageBusClient, IAsyncDisposable
     {
         private readonly string _queueName = "my_demo_queue";
@@ -136,7 +138,7 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                     });
 
                     // 2. Prepare the message
-                    var messageBody = JsonSerializer.Serialize(new MessageEnvelope<T> (ConsumerId : consumerId, Inputs : message ));
+                    var messageBody = JsonSerializer.Serialize(new MessageEnvelope<T>(ConsumerId: consumerId, Inputs: message));
                     var body = Encoding.UTF8.GetBytes(messageBody);
 
                     // 3. Publish with basicProperties containing our trace context
@@ -184,7 +186,7 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                     var messageBody = Encoding.UTF8.GetString(body);
                     var message = JsonSerializer.Deserialize<MessageEnvelope<string[]>>(messageBody);
 
-                    if  (message != null && message.ConsumerId != default(Guid) && message.Inputs != null)
+                    if (message != null && message.ConsumerId != default(Guid) && message.Inputs != null)
                     {
                         using (var receiveMessageActivity = _activityService.StartActivity("ReceiveMessage", ActivityKind.Consumer, parentContext.ActivityContext))
                         {

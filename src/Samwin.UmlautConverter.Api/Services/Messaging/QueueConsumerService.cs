@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Samwin.UmlautConverter.Api.Services.Messaging
 {
+    [ExcludeFromCodeCoverage]
     public class QueueConsumerService : BackgroundService
     {
         private readonly IMessageBusClient _messageBusClient;
@@ -28,7 +30,7 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                     try
                     {
                         _logger.LogInformation("Initializing RabbitMQ consumer for 'my_demo_queue'...");
-                        
+
                         await _messageBusClient.ConsumeMessagesAsync(stoppingToken);
 
                         // Wait indefinitely until the service is stopped
@@ -46,7 +48,8 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                     }
                 }
             }
-            finally {
+            finally
+            {
                 _logger.LogInformation("Queue Consumer Service has stopped.");
             }
         }
