@@ -1,31 +1,28 @@
 Summary
-  Generated on: 04/14/2026 - 19:15:27
-  Coverage date: 04/14/2026 - 19:15:19 - 04/14/2026 - 19:15:25
+  Generated on: 04/17/2026 - 19:54:43
+  Coverage date: 04/17/2026 - 19:54:36 - 04/17/2026 - 19:54:41
   Parser: MultiReport (2x Cobertura)
   Assemblies: 2
-  Classes: 30
-  Files: 30
-  Line coverage: 74.1%
-  Covered lines: 501
-  Uncovered lines: 175
-  Coverable lines: 676
-  Total lines: 2061
-  Branch coverage: 77.9% (212 of 272)
+  Classes: 27
+  Files: 27
+  Line coverage: 94.9%
+  Covered lines: 485
+  Uncovered lines: 26
+  Coverable lines: 511
+  Total lines: 1769
+  Branch coverage: 91.3% (212 of 232)
   Covered branches: 212
-  Total branches: 272
-  Method coverage: 76.1% (64 of 84)
-  Full method coverage: 73.8% (62 of 84)
-  Covered methods: 64
-  Fully covered methods: 62
-  Total methods: 84
+  Total branches: 232
+  Method coverage: 88% (59 of 67)
+  Full method coverage: 85% (57 of 67)
+  Covered methods: 59
+  Fully covered methods: 57
+  Total methods: 67
 
-Samwin.UmlautConverter.Api                                                        33.3%
+Samwin.UmlautConverter.Api                                                        92.4%
   Samwin.UmlautConverter.Api.Controllers.AuthController                            100%
   Samwin.UmlautConverter.Api.Models.WeatherUpdateMessage                             0%
-  Samwin.UmlautConverter.Api.Services.MessageBusClient                               0%
-  Samwin.UmlautConverter.Api.Services.MetricsService                                80%
-  Samwin.UmlautConverter.Api.Services.QueueConsumerService                           0%
-  Samwin.UmlautConverter.Api.Services.TokenGeneratorService                        100%
+  Samwin.UmlautConverter.Api.Services.Jwt.TokenGeneratorService                    100%
   Samwin.UmlautConverter.Api.Settings.JwtSettings                                  100%
 
 Samwin.UmlautConverterLib                                                         95.2%
