@@ -22,6 +22,10 @@ using Samwin.UmlautConverter.Api.Settings;
 using Samwin.UmlautConverterLib.Step2;
 using Samwin.UmlautConverterLib.Step3;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
+using System.Threading.RateLimiting;
+using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Samwin.UmlautConverter.Api
 {
@@ -92,7 +96,7 @@ namespace Samwin.UmlautConverter.Api
                                             // This will show up as a tag/label in your metrics
                                             new("server-name", Environment.MachineName),
                                             // Often used in demos to show the physical or virtual host
-                                            new("host-name", Environment.MachineName) 
+                                            new("host-name", Environment.MachineName)
                                         });
                                 })
                     .AddAspNetCoreInstrumentation()
@@ -151,6 +155,59 @@ namespace Samwin.UmlautConverter.Api
                 };
             });
 
+            services.AddRateLimiter(options =>
+            {
+                var retryAfter = TimeSpan.FromSeconds(10);
+                // Return 429 immediately when limit is exceeded
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                {
+                    var clientId =
+                        httpContext.User?.Identity?.Name
+                        ?? httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                        ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                        ?? "unknown";
+
+                    return RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: clientId,
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 5,                 // max 10 requests
+                            Window = retryAfter, // per 10 seconds
+                            QueueLimit = 0,                   // ❌ no queuing
+                            AutoReplenishment = true
+                        });
+                });
+                options.OnRejected = async (context, token) =>
+                {
+                    var traceId = context.HttpContext.TraceIdentifier;
+                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
+                    var clientId =
+                            context.HttpContext.User?.Identity?.Name
+                            ?? context.HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                            ?? context.HttpContext.Connection.RemoteIpAddress?.ToString()
+                            ?? "unknown";
+                    var path = context.HttpContext.Request.Path;
+
+                    // Log the event
+                    logger.LogWarning($"Rate limit exceeded. Client: {clientId}, Path: {path}.");
+
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                    context.HttpContext.Response.Headers["Retry-After"] = retryAfter.TotalSeconds.ToString();
+                    context.HttpContext.Response.ContentType = "application/json";
+
+                    var response = new
+                    {
+                        error = "rate_limit_exceeded",
+                        message = "Too many requests. Please try again later.",
+                        retryAfterSeconds = retryAfter.TotalSeconds
+                    };
+
+                    await context.HttpContext.Response.WriteAsJsonAsync(response, cancellationToken: token);
+                };
+            });
+
             // Swagger with JWT support
             services.AddSwaggerGen(c =>
             {
@@ -206,6 +263,7 @@ namespace Samwin.UmlautConverter.Api
             app.UseRouting();
             app.UseMiddleware<MetricsMiddleware>();
             app.UseAuthentication();
+            app.UseRateLimiter(); //user-based partitioning works
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
