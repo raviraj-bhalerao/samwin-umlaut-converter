@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.Http;
 using System.Threading.RateLimiting;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Samwin.UmlautConverter.Api
 {
@@ -163,11 +164,16 @@ namespace Samwin.UmlautConverter.Api
 
                 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 {
+                    var logger = httpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
+
                     var clientId =
-                        httpContext.User?.Identity?.Name
-                        ?? httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
-                        ?? httpContext.Connection.RemoteIpAddress?.ToString()
-                        ?? "unknown";
+                        httpContext.User?.Identity?.IsAuthenticated == true
+                            ? httpContext.User.Identity!.Name!
+                            : (httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
+                               ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                               ?? "unknown");
+
+                    logger.LogInformation("ClientId: {ClientId}", clientId);
 
                     return RateLimitPartition.GetFixedWindowLimiter(
                         partitionKey: clientId,
@@ -179,23 +185,26 @@ namespace Samwin.UmlautConverter.Api
                             AutoReplenishment = true
                         });
                 });
-                options.OnRejected = async (context, token) =>
+                options.OnRejected = async (httpContext, token) =>
                 {
-                    var traceId = context.HttpContext.TraceIdentifier;
-                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
+                    var traceId = httpContext.HttpContext.TraceIdentifier;
+                    var logger = httpContext.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
                     var clientId =
-                            context.HttpContext.User?.Identity?.Name
-                            ?? context.HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
-                            ?? context.HttpContext.Connection.RemoteIpAddress?.ToString()
-                            ?? "unknown";
-                    var path = context.HttpContext.Request.Path;
+                        httpContext.HttpContext.User?.Identity?.IsAuthenticated == true
+                            ? httpContext.HttpContext.User.Identity!.Name!
+                            : (httpContext.HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
+                               ?? httpContext.HttpContext.Connection.RemoteIpAddress?.ToString()
+                               ?? "unknown");
+
+                    var path = httpContext.HttpContext.Request.Path;
 
                     // Log the event
-                    logger.LogWarning($"Rate limit exceeded. Client: {clientId}, Path: {path}.");
+                    logger.LogWarning("Rate limit exceeded for client {ClientId} on {Path}",
+                                    clientId, path);
 
-                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                    context.HttpContext.Response.Headers["Retry-After"] = retryAfter.TotalSeconds.ToString();
-                    context.HttpContext.Response.ContentType = "application/json";
+                    httpContext.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                    httpContext.HttpContext.Response.Headers["Retry-After"] = retryAfter.TotalSeconds.ToString();
+                    httpContext.HttpContext.Response.ContentType = "application/json";
 
                     var response = new
                     {
@@ -204,7 +213,7 @@ namespace Samwin.UmlautConverter.Api
                         retryAfterSeconds = retryAfter.TotalSeconds
                     };
 
-                    await context.HttpContext.Response.WriteAsJsonAsync(response, cancellationToken: token);
+                    await httpContext.HttpContext.Response.WriteAsJsonAsync(response, cancellationToken: token);
                 };
             });
 
@@ -260,6 +269,10 @@ namespace Samwin.UmlautConverter.Api
                 DefaultContentType = "text/plain"
             });
 
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
             app.UseRouting();
             app.UseMiddleware<MetricsMiddleware>();
             app.UseAuthentication();

@@ -41,16 +41,21 @@ Write-Host "Requests: $totalRequests`n"
 # TEST LOOP
 # ===============================
 
-for ($i = 1; $i -le $totalRequests; $i++)
-{
+for ($i = 1; $i -le $totalRequests; $i++) {
     try {
+        $headers = @{}
+
+        if (-not [string]::IsNullOrWhiteSpace($token)) {
+            $headers["Authorization"] = "Bearer $token"
+        }
+
         $response = Invoke-WebRequest `
             -Uri $endpoint `
             -Method GET `
-            -Headers @{ Authorization = "Bearer $token" } `
+            -Headers $headers `
             -UseBasicParsing `
             -ErrorAction Stop
-
+            
         $status = $response.StatusCode
         $retryAfter = $response.Headers["Retry-After"]
 
@@ -62,18 +67,25 @@ for ($i = 1; $i -le $totalRequests; $i++)
         }
     }
     catch {
-        $statusCode = $_.Exception.Response.StatusCode.value__
-
+        $statusCode = $null
         $retryAfter = $null
-        if ($_.Exception.Response.Headers["Retry-After"]) {
-            $retryAfter = $_.Exception.Response.Headers["Retry-After"]
+
+        if ($_.Exception.Response -ne $null) {
+            $statusCode = $_.Exception.Response.StatusCode.value__
+
+            if ($_.Exception.Response.Headers -ne $null) {
+                $retryAfter = $_.Exception.Response.Headers["Retry-After"]
+            }
         }
 
         if ($statusCode -eq 429) {
             Write-Host "Request $i => 429 TOO MANY REQUESTS | Retry-After: $retryAfter sec" -ForegroundColor Red
         }
-        else {
+        elseif ($statusCode) {
             Write-Host "Request $i => ERROR ($statusCode)" -ForegroundColor Magenta
+        }
+        else {
+            Write-Host "Request $i => ERROR (No response - possible network/auth issue)" -ForegroundColor DarkRed
         }
     }
 
