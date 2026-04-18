@@ -9,6 +9,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Samwin.UmlautConverter.Api.Services.Exceptions;
 using Samwin.UmlautConverter.Api.Services.Messaging;
 using Samwin.UmlautConverter.Api.Services.Telemetry;
 using Samwin.UmlautConverter.Api.Utils;
@@ -131,31 +132,36 @@ namespace Samwin.UmlautConverter.Api.Services.UmlautConversion
                         yield break;
                     }
 
-                    using (_activityService.StartActivity("ReceivedQuery", ActivityKind.Internal, item.Context)) ;
-
-                    _logger.LogInformation($"Query received: {item.Input}");
-
-                    // ✅ Cache it
-                    if (useCache)
+                    using (var receiveQryActivity = _activityService.StartActivity("ReceivedQuery", ActivityKind.Internal, item.Context))
                     {
-                        string cacheKey = $"umlautToken:{item.Input}";
+                        _logger.LogInformation($"Query received: {item.Query}");
 
-                        var cacheOptions = new MemoryCacheEntryOptions()
-                            .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
-                            .RegisterPostEvictionCallback((key, value, reason, state) =>
-                            {
-                                // This code runs when the item is removed
-                                _logger.LogWarning($"Cache entry {key} was evicted. Reason: {reason}");
-                            });
+                        // ✅ Cache it
+                        if (useCache)
+                        {
+                            string cacheKey = $"umlautToken:{item.Input}";
 
-                        _cache.Set(cacheKey, item.Query, cacheOptions);
+                            var cacheOptions = new MemoryCacheEntryOptions()
+                                .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
+                                .RegisterPostEvictionCallback((key, value, reason, state) =>
+                                {
+                                    // This code runs when the item is removed
+                                    _logger.LogWarning($"Cache entry {key} was evicted. Reason: {reason}");
+                                });
 
-                        _logger.LogInformation($"Query cached: {cacheKey} at {DateTime.Now}, will be evicted at {DateTime.Now.AddMinutes(2)}");
+                            _cache.Set(cacheKey, item.Query, cacheOptions);
+
+                            _logger.LogInformation($"Query cached: {cacheKey} at {DateTime.Now}, will be evicted at {DateTime.Now.AddMinutes(2)}");
+                        }
+
+                        pendingInputs.Remove(item.Input);
+                        if (item.Input.Equals("error", StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new QueryGenerationException($"Failed to process input: {item.Input}");
+                        }
+
+                        yield return item.Query;
                     }
-
-                    pendingInputs.Remove(item.Input);
-
-                    yield return item.Query;
                 }
             }
             finally

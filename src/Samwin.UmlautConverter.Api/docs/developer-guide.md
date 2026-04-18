@@ -44,7 +44,7 @@ using (_logger.BeginScope(new Dictionary<string, object>
 
 ---
 
-## 3.3 Tracing
+## 2.3 Tracing
 
 Use `IActivityService` to create traces:
 
@@ -390,8 +390,6 @@ Every feature should include:
 [HttpGet("example")]
 public IActionResult Example()
 {
-    _metricsService.RequestCounter.Add(1, new TagList { { "endpoint", "example" } });
-
     using (_logger.BeginScope(new Dictionary<string, object>
     {
         { "Scope", "Example" },
@@ -654,7 +652,7 @@ When adding new features:
 * Block async flows
 
 ---
-## 17. Distributed Systems Observability Rule (NEW)
+## 17. Distributed Systems Observability Rule
 
 For any workflow involving async processing (queues, background services, SSE):
 
@@ -666,6 +664,149 @@ For any workflow involving async processing (queues, background services, SSE):
 * Validate trace continuity in Grafana Tempo
 
 ---
+
+# 18. API Response Standardization
+
+Add this after Error Handling.
+
+---
+
+## 18.1 Standard Response Contract
+
+All non-SSE endpoints must return a standardized response:
+
+```csharp
+public class ApiResponse<T>
+{
+    public bool Success { get; set; }
+    public T? Data { get; set; }
+    public string? Message { get; set; }
+    public string? TraceId { get; set; }
+}
+```
+
+---
+
+## 18.2 Behavior
+
+| Scenario  | Behavior                        |
+| --------- | ------------------------------- |
+| Success   | Wrapped via `ApiResponseFilter` |
+| Exception | Handled via middleware          |
+| TraceId   | Comes from `Activity.TraceId`   |
+
+---
+
+## 18.3 Implementation Rules
+
+* ❌ Do NOT manually wrap responses in controllers
+* ✔ Use `ApiResponseFilter` for automatic wrapping
+* ✔ Use middleware for exception handling
+
+---
+
+## 18.4 TraceId Rule (IMPORTANT)
+
+```csharp
+TraceId = Activity.Current?.TraceId.ToString()
+```
+
+> `HttpContext.TraceIdentifier` must NOT be used for distributed tracing.
+
+---
+
+---
+
+# 19. SSE Response & Failure Handling
+
+This is where your recent work really shines.
+
+---
+
+## 19.1 SSE Response Contract
+
+SSE endpoints use:
+
+```csharp
+SseItem<ApiResponse<T>>
+```
+
+---
+
+## 19.2 Event Types
+
+| Event Type | Meaning               |
+| ---------- | --------------------- |
+| `query`    | Successful data event |
+| `error`    | Failure event         |
+
+---
+
+## 19.3 Failure Handling Pattern (CRITICAL)
+
+Exceptions must be handled **inside the stream**, not by middleware.
+
+```csharp
+try
+{
+    yield return successEvent;
+}
+catch (Exception ex)
+{
+    yield return errorEvent;
+    yield break;
+}
+```
+
+---
+
+## 19.4 Why Middleware is NOT used for SSE
+
+* SSE streams are long-lived
+* Response starts early
+* Middleware cannot modify response once streaming begins
+
+👉 Therefore:
+
+> SSE endpoints must handle errors explicitly and emit error events.
+
+---
+
+## 19.5 Chaos / Failure Simulation
+
+Failures are triggered via **input-driven logic**, not test flags.
+
+Example:
+
+```csharp
+if (input.Contains("error"))
+{
+    throw new QueryGenerationException(...);
+}
+```
+
+---
+
+## 19.6 Expected Client Behavior
+
+Clients must:
+
+* Handle `event: error`
+* Stop consuming stream after error
+* Use `TraceId` for debugging
+
+---
+
+## 19.7 Encoding Requirement (IMPORTANT)
+
+SSE responses must use UTF-8:
+
+```csharp
+Response.Headers.ContentType = "text/event-stream; charset=utf-8";
+```
+
+---
+
 
 ### Target architecture principle:
 

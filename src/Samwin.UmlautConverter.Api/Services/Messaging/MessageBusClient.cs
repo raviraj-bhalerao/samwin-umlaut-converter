@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Threading;
@@ -132,7 +131,8 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                     };
 
                     // Inject the current Activity context into the message headers for distributed tracing
-                    Propagator.Inject(new PropagationContext(Activity.Current?.Context ?? default, Baggage.Current), properties.Headers, (headers, key, value) =>
+                    Propagator.Inject(new PropagationContext(Activity.Current?.Context ?? default, Baggage.Current),
+                    properties.Headers, (headers, key, value) =>
                     {
                         headers[key] = value;
                     });

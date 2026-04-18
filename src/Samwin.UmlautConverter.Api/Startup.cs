@@ -27,6 +27,7 @@ using System.Threading.RateLimiting;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.HttpOverrides;
+using Samwin.UmlautConverter.Api.ResponseManagement;
 
 namespace Samwin.UmlautConverter.Api
 {
@@ -50,8 +51,13 @@ namespace Samwin.UmlautConverter.Api
             var authHeader = Convert.ToBase64String(
                 Encoding.UTF8.GetBytes($"{instanceId}:{apiKey}"));
 
-            services.AddControllers();
+            services.AddControllers(options =>
+            {
+                options.Filters.Add<ApiResponseFilter>();
+            });
+            
             services.AddDirectoryBrowser();
+            services.AddHttpContextAccessor();
             services.AddTransient<ICreateTokenService, TokenGeneratorService>();
             services.AddSingleton<IActivityService, ActivityService>();
             services.AddSingleton<MetricsService>();
