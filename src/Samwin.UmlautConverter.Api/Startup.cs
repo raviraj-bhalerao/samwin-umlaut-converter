@@ -280,6 +280,7 @@ namespace Samwin.UmlautConverter.Api
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
             app.UseRouting();
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseMiddleware<MetricsMiddleware>();
             app.UseAuthentication();
             app.UseRateLimiter(); //user-based partitioning works

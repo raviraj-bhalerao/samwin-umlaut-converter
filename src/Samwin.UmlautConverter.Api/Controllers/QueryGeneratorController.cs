@@ -48,7 +48,7 @@ namespace Samwin.UmlautConverter.Api.Controllers
             CancellationToken clientDisconnectedToken) // Automatically bound to the request lifetime
         {
 
-            bool shouldCache = useCache ?? HttpContext.Request.Query.ContainsKey("useCache");
+            bool shouldCache = useCache ?? HttpContext.Request.Query.ContainsKey(nameof(useCache));
 
             return TypedResults.ServerSentEvents(getQueries(inputs, shouldCache, clientDisconnectedToken));
 

@@ -25,8 +25,14 @@ namespace Samwin.UmlautConverter.Api.Controllers
         }
 
         [HttpGet]
-        public WeatherForecast[] Get()
+        public WeatherForecast[] Get([FromQuery] bool? simulateError)
         {
+            bool shouldError = simulateError ?? HttpContext.Request.Query.ContainsKey(nameof(simulateError));
+            if(shouldError)
+            {
+                throw new Exception("Simulated error");
+            }
+
             using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "WeatherForecast" }, { "OperationId", Guid.NewGuid() } }))
             {
                 _logger.LogInformation("Weather report composing 🚀");

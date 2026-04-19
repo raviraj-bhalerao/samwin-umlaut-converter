@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -39,13 +40,8 @@ namespace Samwin.UmlautConverter.Api.ResponseManagement
 
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-
-                var response = new ApiResponse<string>
-                {
-                    Success = false,
-                    Message = ex.Message,
-                    TraceId = context.TraceIdentifier
-                };
+                
+                var response = ApiResponseFactory.Failure<string>("Server Error", context, new List<string>(){ex.Message});
 
                 await context.Response.WriteAsJsonAsync(response);
             }
