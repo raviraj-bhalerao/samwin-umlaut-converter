@@ -29,8 +29,8 @@ $endpoint = "$baseUrl/WeatherForecast"
 # TEST SETTINGS
 # ===============================
 
-$totalRequests = 30
-$sleepBetweenMs = 1000
+$totalRequests = 100
+$sleepBetweenMs = 200
 
 Write-Host "`nStarting Rate Limit Test..." -ForegroundColor Cyan
 Write-Host "Base URL: $baseUrl"

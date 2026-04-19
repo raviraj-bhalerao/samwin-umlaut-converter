@@ -185,7 +185,7 @@ namespace Samwin.UmlautConverter.Api
                         partitionKey: clientId,
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 5,                 // max 10 requests
+                            PermitLimit = 15,                 // max 15 requests
                             Window = retryAfter, // per 10 seconds
                             QueueLimit = 0,                   // ❌ no queuing
                             AutoReplenishment = true

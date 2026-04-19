@@ -142,7 +142,7 @@ namespace Samwin.UmlautConverter.Api.Services.UmlautConversion
                             string cacheKey = $"umlautToken:{item.Input}";
 
                             var cacheOptions = new MemoryCacheEntryOptions()
-                                .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
+                                .SetAbsoluteExpiration(TimeSpan.FromMinutes(1))
                                 .RegisterPostEvictionCallback((key, value, reason, state) =>
                                 {
                                     // This code runs when the item is removed
