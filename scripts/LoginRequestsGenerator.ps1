@@ -1,4 +1,5 @@
-# JWT Login Load Generator
+# JWT Login Load Generator (NO 429)
+$startTime = Get-Date
 
 $loginUrl = "https://samwin-umlaut-converter-api.onrender.com/auth/LoginWithPassword"
 
@@ -7,15 +8,21 @@ $users = @(
     @{ userName = "behrs";     password = "behrs@1234" }
 )
 
-Write-Host "Starting JWT login load simulation..." -ForegroundColor Green
+$batchSize = 10       # safely under 15
+$delaySec = 10        # matches rate limiter window
+$totalRequests = 100
 
-for ($cycle = 1; $cycle -le 5; $cycle++) {
+$sent = 0
 
-    Write-Host "Cycle $cycle - sending login burst" -ForegroundColor Cyan
+Write-Host "Starting JWT login simulation (no throttling expected)..." -ForegroundColor Green
 
-    1..50 | ForEach-Object {
+while ($sent -lt $totalRequests) {
 
-        $user = $users[$_ % 2]
+    Write-Host "Dispatching batch starting at $sent" -ForegroundColor Cyan
+
+    1..$batchSize | ForEach-Object {
+
+        $user = $users[$sent % 2]
 
         $body = @{
             userName = $user.userName
@@ -24,30 +31,22 @@ for ($cycle = 1; $cycle -le 5; $cycle++) {
 
         Start-Job -ScriptBlock {
             param($url, $payload)
-
             try {
-                $response = Invoke-RestMethod `
+                Invoke-RestMethod `
                     -Uri $url `
                     -Method Post `
                     -ContentType "application/json" `
-                    -Body $payload
-
-                # Optional: print only successful JWT response once in a while
-                if ($response -and (Get-Random -Minimum 1 -Maximum 20 -eq 1)) {
-                    Write-Host "JWT received"
-                }
+                    -Body $payload | Out-Null
             }
-            catch {
-                # silently ignore 429 or auth errors (expected under rate limit)
-            }
-
+            catch {}
         } -ArgumentList $loginUrl, $body | Out-Null
+
+        $sent++
+        if ($sent -ge $totalRequests) { break }
     }
 
-    Write-Host "Cycle $cycle dispatched (rate limiter will shape traffic)" -ForegroundColor Yellow
-
-    # IMPORTANT: aligns with your rate limit window (10s)
-    Start-Sleep -Seconds 10
+    Write-Host "Batch completed - waiting for rate window reset..." -ForegroundColor Yellow
+    Start-Sleep -Seconds $delaySec
 }
-
-Write-Host "JWT load simulation complete" -ForegroundColor Green
+$duration = (Get-Date) - $startTime
+Write-Host "Login load simulation completed (no 429 expected) in : $($duration.ToString())" -ForegroundColor Green

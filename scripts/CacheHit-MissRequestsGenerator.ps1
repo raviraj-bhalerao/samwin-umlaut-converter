@@ -1,5 +1,5 @@
 # Cache lifecycle simulation (MISS → HIT → EVICTION → MISS)
-
+$startTime = Get-Date
 $url = "https://samwin-umlaut-converter-api.onrender.com/QueryGenerator/GetQuery?useCache"
 
 $inputs = @(
@@ -8,7 +8,7 @@ $inputs = @(
     "suessmilch", "uebelhoer", "faehrbaeker", "loewenbraeu",
     "knoedlbuegel", "spaetbloeher", "muehlstueck"
 )
-
+$cacheEvictionDurationInSeconds = 60
 $query = ($inputs | ForEach-Object { "input=$_" }) -join "&"
 $fullUrl = "$url&$query"
 
@@ -19,26 +19,41 @@ for ($cycle = 1; $cycle -le 5; $cycle++) {
     Write-Host "Cycle $cycle - dispatching requests"
 
     # Fire-and-forget parallel calls
-    1..100 | ForEach-Object {
+    $batchSize = 15   # Y
+    $rateLimiterDelaySec = 10    # X
 
-        $percent = ($_ / 100) * 100
-        Write-Host "Dispatching request $_ / 100" -ForegroundColor Cyan
+    $totalRequests = 100
+    $sent = 0
 
-        Start-Job -ScriptBlock {
-            param($u)
-            try {
-                Invoke-WebRequest -Uri $u -Method Get -UseBasicParsing | Out-Null
-            }
-            catch {}
-        } -ArgumentList $fullUrl | Out-Null
+    while ($sent -lt $totalRequests) {
+
+        Write-Host "Dispatching batch starting at $sent" -ForegroundColor Cyan
+
+        1..$batchSize | ForEach-Object {
+
+            $sent++
+
+            Start-Job -ScriptBlock {
+                param($u)
+                try {
+                    Invoke-WebRequest -Uri $u -Method Get -UseBasicParsing | Out-Null
+                }
+                catch {}
+            } -ArgumentList $fullUrl | Out-Null
+
+            if ($sent -ge $totalRequests) { break }
+        }
+
+        Write-Host "Batch dispatched. Waiting $rateLimiterDelaySec sec..." -ForegroundColor Yellow
+        Start-Sleep -Seconds $rateLimiterDelaySec
     }
 
     Write-Host "Cycle $cycle - requests dispatched"
 
     if ($cycle -lt 5) {
-        Write-Host "Waiting 2 minutes for cache eviction..."
-        Start-Sleep -Seconds 60
+        Write-Host "Waiting $cacheEvictionDurationInSeconds seconds for cache eviction..."
+        Start-Sleep -Seconds $cacheEvictionDurationInSeconds
     }
 }
-
-Write-Host "Simulation complete"
+$duration = (Get-Date) - $startTime
+Write-Host "Simulation completed in : $($duration.ToString())"

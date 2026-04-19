@@ -168,6 +168,7 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
             var consumer = new AsyncEventingBasicConsumer(channel);
             consumer.ReceivedAsync += async (model, ea) =>
             {
+                var unAckMessageDueToError = false;
                 try
                 {
                     // Extract the Activity context from the message headers
@@ -217,13 +218,23 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                             }
                         }
                     }
-                    await channel.BasicAckAsync(ea.DeliveryTag, false, cancellationToken);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error processing RabbitMQ message.");
-                    // Nack and requeue the message
-                    await channel.BasicNackAsync(ea.DeliveryTag, false, true, cancellationToken);
+                    unAckMessageDueToError = true;
+                }
+                finally
+                {
+                    if (unAckMessageDueToError)
+                    {
+                        // Nack and requeue the message
+                        await channel.BasicNackAsync(ea.DeliveryTag, false, true, cancellationToken);
+                    }
+                    else
+                    {
+                        await channel.BasicAckAsync(ea.DeliveryTag, false, cancellationToken);
+                    }
                 }
             };
 

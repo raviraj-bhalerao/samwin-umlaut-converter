@@ -1,6 +1,8 @@
 # ===============================
-# CONFIG - BASE URL (with fallback)
+# CONFIG
 # ===============================
+
+$startTime = Get-Date
 
 $defaultBaseUrl = "https://samwin-umlaut-converter-api.onrender.com"
 
@@ -13,15 +15,7 @@ else {
     $baseUrl = $baseUrlInput
 }
 
-# ===============================
-# INPUT TOKEN
-# ===============================
-
 $token = Read-Host "Enter JWT token"
-
-# ===============================
-# BUILD FINAL URL
-# ===============================
 
 $endpoint = "$baseUrl/WeatherForecast"
 
@@ -30,66 +24,69 @@ $endpoint = "$baseUrl/WeatherForecast"
 # ===============================
 
 $totalRequests = 100
-$sleepBetweenMs = 200
+$batchSize = 30     # >15 → guarantees 429
+$delayMs = 2000     # small delay between bursts
 
-Write-Host "`nStarting Rate Limit Test..." -ForegroundColor Cyan
-Write-Host "Base URL: $baseUrl"
+$sent = 0
+
+Write-Host "`nStarting Rate Limit Test (Expect heavy 429)..." -ForegroundColor Cyan
 Write-Host "Endpoint: $endpoint"
-Write-Host "Requests: $totalRequests`n"
+Write-Host "Total Requests: $totalRequests"
+Write-Host "Batch Size: $batchSize`n"
 
 # ===============================
 # TEST LOOP
 # ===============================
 
-for ($i = 1; $i -le $totalRequests; $i++) {
-    try {
-        $headers = @{}
+while ($sent -lt $totalRequests) {
 
-        if (-not [string]::IsNullOrWhiteSpace($token)) {
-            $headers["Authorization"] = "Bearer $token"
+    Write-Host "Dispatching burst starting at $sent" -ForegroundColor Yellow
+
+    1..$batchSize | ForEach-Object {
+
+        if ($sent -ge $totalRequests) { break }
+
+        try {
+            $headers = @{}
+
+            if (-not [string]::IsNullOrWhiteSpace($token)) {
+                $headers["Authorization"] = "Bearer $token"
+            }
+
+            $response = Invoke-WebRequest `
+                -Uri $endpoint `
+                -Method GET `
+                -Headers $headers `
+                -UseBasicParsing `
+                -ErrorAction Stop
+
+            Write-Host "Request $sent => 200" -ForegroundColor Green
         }
+        catch {
+            $statusCode = $null
+            $retryAfter = $null
 
-        $response = Invoke-WebRequest `
-            -Uri $endpoint `
-            -Method GET `
-            -Headers $headers `
-            -UseBasicParsing `
-            -ErrorAction Stop
-            
-        $status = $response.StatusCode
-        $retryAfter = $response.Headers["Retry-After"]
+            if ($_.Exception.Response -ne $null) {
+                $statusCode = $_.Exception.Response.StatusCode.value__
 
-        if ($retryAfter) {
-            Write-Host "Request $i => $status | Retry-After: $retryAfter sec" -ForegroundColor Yellow
-        }
-        else {
-            Write-Host "Request $i => $status" -ForegroundColor Green
-        }
-    }
-    catch {
-        $statusCode = $null
-        $retryAfter = $null
+                if ($_.Exception.Response.Headers -ne $null) {
+                    $retryAfter = $_.Exception.Response.Headers["Retry-After"]
+                }
+            }
 
-        if ($_.Exception.Response -ne $null) {
-            $statusCode = $_.Exception.Response.StatusCode.value__
-
-            if ($_.Exception.Response.Headers -ne $null) {
-                $retryAfter = $_.Exception.Response.Headers["Retry-After"]
+            if ($statusCode -eq 429) {
+                Write-Host "Request $sent => 429 | Retry-After: $retryAfter sec" -ForegroundColor Red
+            }
+            else {
+                Write-Host "Request $sent => ERROR ($statusCode)" -ForegroundColor Magenta
             }
         }
 
-        if ($statusCode -eq 429) {
-            Write-Host "Request $i => 429 TOO MANY REQUESTS | Retry-After: $retryAfter sec" -ForegroundColor Red
-        }
-        elseif ($statusCode) {
-            Write-Host "Request $i => ERROR ($statusCode)" -ForegroundColor Magenta
-        }
-        else {
-            Write-Host "Request $i => ERROR (No response - possible network/auth issue)" -ForegroundColor DarkRed
-        }
+        $sent++
     }
 
-    Start-Sleep -Milliseconds $sleepBetweenMs
+    Write-Host "Burst complete. Short pause..." -ForegroundColor Cyan
+    Start-Sleep -Milliseconds $delayMs
 }
-
-Write-Host "`nTest Completed.`n" -ForegroundColor Cyan
+$duration = (Get-Date) - $startTime
+Write-Host "`nTest Completed in  : $($duration.ToString())`n" -ForegroundColor Cyan

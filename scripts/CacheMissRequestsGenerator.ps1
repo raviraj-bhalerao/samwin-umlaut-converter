@@ -1,13 +1,39 @@
-# Cache MISS generator
-
+# Cache MISS generator (rate-limit aware)
+$startTime = Get-Date
 $url = "https://samwin-umlaut-converter-api.onrender.com/QueryGenerator/GetQuery?useCache"
 
-Write-Host "Generating cache misses..."
+$batchSize = 15     # >15 to trigger 429
+$delaySec = 10      # matches rate limiter window
 
-for ($i = 1; $i -le 300; $i++) {
-    $randomInput = "word$i"
-    $fullUrl = "$url&input=$randomInput"
+$totalRequests = 300
+$sent = 0
 
-    Invoke-RestMethod -Uri $fullUrl -Method Get | Out-Null
-    Start-Sleep -Milliseconds 200
+Write-Host "Generating cache misses (controlled batches)..." -ForegroundColor Green
+
+while ($sent -lt $totalRequests) {
+
+    Write-Host "Dispatching batch starting at $sent" -ForegroundColor Cyan
+
+    1..$batchSize | ForEach-Object {
+
+        $randomInput = "word$sent"
+        $fullUrl = "$url&input=$randomInput"
+
+        Start-Job -ScriptBlock {
+            param($u)
+            try {
+                Invoke-WebRequest -Uri $u -Method Get -UseBasicParsing | Out-Null
+            }
+            catch {}
+        } -ArgumentList $fullUrl | Out-Null
+
+        $sent++
+        if ($sent -ge $totalRequests) { break }
+    }
+
+    Write-Host "Batch dispatched (expect cache MISS + some 429)" -ForegroundColor Yellow
+
+    Start-Sleep -Seconds $delaySec
 }
+$duration = (Get-Date) - $startTime
+Write-Host "Cache miss metrics generation completed in : $($duration.ToString())"
