@@ -1,63 +1,103 @@
-# Mixed traffic (NO 429, controlled batches)
+# =========================
+# Mixed traffic simulation (stable, no job killing)
+# =========================
+
 $startTime = Get-Date
 
 $scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
-Write-Host "Running Script: $scriptName, started at $startTime.ToString()"
+Write-Host "Running Script: $scriptName, started at $($startTime.ToString())"
 
 $normalUrl = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast"
-$errorUrl = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast?simulateError"
+$errorUrl  = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast?simulateError"
 
-$batchSize = 10      # safely under 15
-$rateLimiterDelaySec = 10      # rate limiter window
+$batchSize = 10
+$rateLimiterDelaySec = 10
 $totalRequests = 500
 
 $sent = 0
+$runningJobs = @()
 
-Write-Host "Starting mixed traffic simulation (no 429 expected)..." -ForegroundColor Green
+Write-Host "Starting mixed traffic simulation (stable load pattern)..." -ForegroundColor Green
 
+# =========================
+# MAIN LOOP
+# =========================
 while ($sent -lt $totalRequests) {
 
-    Write-Host "Dispatching batch starting at $sent" -ForegroundColor Cyan
+    Write-Host "`nDispatching batch starting at $sent" -ForegroundColor Cyan
 
+    # -------------------------
+    # BURST BATCH
+    # -------------------------
     1..$batchSize | ForEach-Object {
+
+        if ($sent -ge $totalRequests) { return }
 
         $rand = Get-Random -Minimum 1 -Maximum 10
 
-        Start-Job -ScriptBlock {
+        $job = Start-Job -ScriptBlock {
             param($nUrl, $eUrl, $r)
 
             try {
                 if ($r -le 7) {
-                    Invoke-RestMethod -Uri $nUrl -Method Get | Out-Null
+                    Invoke-RestMethod -Uri $nUrl -Method Get -TimeoutSec 60 | Out-Null
                 }
                 else {
-                    Invoke-RestMethod -Uri $eUrl -Method Get -ErrorAction Stop | Out-Null
+                    Invoke-RestMethod -Uri $eUrl -Method Get -ErrorAction Stop -TimeoutSec 60 | Out-Null
                 }
             }
-            catch {}
-            finally {
-                $error.Clear()
-                # --- HIGHLIGHTED CHANGE 4: Micro-Throttle ---
-                # A tiny pause (10ms) helps the OS manage the network buffer 
-                # without significantly slowing down your burst test.
-                Start-Sleep -Milliseconds 100                   
+            catch {
+                # expected errors for simulation
             }
-        } -ArgumentList $normalUrl, $errorUrl, $rand | Out-Null
+        } -ArgumentList $normalUrl, $errorUrl, $rand
 
+        $runningJobs += $job
         $sent++
-        if ($sent -ge $totalRequests) { break }
     }
 
-    Write-Host "Batch dispatched (70% success / 30% error)" -ForegroundColor Yellow
-    # --- CRITICAL ADDITION FOR CELERON ---
-    # This stops the background processes and closes the powershell.exe instances
-    Get-Job | Stop-Job
-    Get-Job | Remove-Job
-    # -------------------------------------
-    Write-Host "Batch cleanup completed. Waiting $rateLimiterDelaySec sec..."
+    Write-Host "Batch dispatched | Active jobs: $($runningJobs.Count)" -ForegroundColor Yellow
 
+    # -------------------------
+    # SOFT CLEANUP ONLY
+    # -------------------------
+    $runningJobs = $runningJobs | Where-Object {
+
+        if ($_.State -eq "Completed") {
+            try {
+                Receive-Job $_ | Out-Null
+            } catch {}
+
+            Remove-Job $_ | Out-Null
+            return $false
+        }
+
+        return $true
+    }
+
+    # -------------------------
+    # RATE LIMIT WINDOW
+    # -------------------------
+    Write-Host "Waiting $rateLimiterDelaySec sec for rate limiter window..."
     Start-Sleep -Seconds $rateLimiterDelaySec
 }
-$endDate = Get-Date;
+
+# =========================
+# FINAL DRAIN (IMPORTANT)
+# =========================
+Write-Host "`nFinal drain started..."
+
+if ($runningJobs.Count -gt 0) {
+    $runningJobs | Wait-Job | Out-Null
+    $runningJobs | Receive-Job | Out-Null
+    $runningJobs | Remove-Job | Out-Null
+}
+
+$runningJobs = @()
+
+# =========================
+# END REPORT
+# =========================
+$endDate = Get-Date
 $duration = $endDate - $startTime
-Write-Host "Mixed traffic simulation completed (no 429) in : $($duration.ToString()), at $endDate.ToString()" -ForegroundColor Green
+
+Write-Host "`nMixed traffic simulation completed in: $($duration.ToString()) at $($endDate.ToString())" -ForegroundColor Green

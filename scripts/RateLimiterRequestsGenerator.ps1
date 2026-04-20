@@ -2,23 +2,27 @@
 # PARAMS & CONFIG
 # ===============================
 Param(
-    [switch]$i  # Use -i to trigger interactive mode
+    [switch]$i
 )
 
 $startTime = Get-Date
 $scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
-Write-Host "Running Script: $scriptName, started at $startTime.ToString()"
+
+Write-Host "Running Script: $scriptName, started at $($startTime.ToString())"
 
 $defaultBaseUrl = "https://samwin-umlaut-converter-api.onrender.com"
 $baseUrl = $defaultBaseUrl
 $token = ""
 
-# If the -i switch is provided, ask for input
+# ===============================
+# INTERACTIVE MODE
+# ===============================
 if ($i) {
-    $baseUrlInput = Read-Host "Enter base URL (press Enter for default: $defaultBaseUrl)"
+    $baseUrlInput = Read-Host "Enter base URL (Enter = default)"
     if (-not [string]::IsNullOrWhiteSpace($baseUrlInput)) {
         $baseUrl = $baseUrlInput
     }
+
     $token = Read-Host "Enter JWT token"
 }
 else {
@@ -31,80 +35,97 @@ $endpoint = "$baseUrl/WeatherForecast"
 # TEST SETTINGS
 # ===============================
 $totalRequests = 100
-$batchSize = 30     # >15 → guarantees 429
-$delayMs = 2000     # small delay between bursts
+$batchSize = 30       # intentionally > 15 to trigger 429
+$delayMs = 2000
 $sent = 0
 
-Write-Host "`nStarting Rate Limit Test (Expect heavy 429)..." -ForegroundColor Cyan
+$runningJobs = @()
+
+Write-Host "`nStarting Rate Limit Test (Expect 429 bursts)..." -ForegroundColor Cyan
 Write-Host "Endpoint: $endpoint"
 Write-Host "Total Requests: $totalRequests"
 Write-Host "Batch Size: $batchSize`n"
 
 # ===============================
-# TEST LOOP
+# MAIN LOOP
 # ===============================
 while ($sent -lt $totalRequests) {
 
     Write-Host "Dispatching burst starting at $sent" -ForegroundColor Yellow
 
+    # -------------------------
+    # BURST REQUESTS
+    # -------------------------
     1..$batchSize | ForEach-Object {
-        if ($sent -ge $totalRequests) { return } # 'return' inside ForEach-Object acts like 'continue'
 
-        try {
-            $headers = @{}
-            if (-not [string]::IsNullOrWhiteSpace($token)) {
-                $headers["Authorization"] = "Bearer $token"
-            }
+        if ($sent -ge $totalRequests) { return }
 
-            $response = Invoke-WebRequest `
-                -Uri $endpoint `
-                -Method GET `
-                -Headers $headers `
-                -UseBasicParsing `
-                -ErrorAction Stop
-
-            Write-Host "Request $sent => 200" -ForegroundColor Green
+        $headers = @{}
+        if (-not [string]::IsNullOrWhiteSpace($token)) {
+            $headers["Authorization"] = "Bearer $token"
         }
-        catch {
-            $statusCode = $null
-            $retryAfter = $null
 
-            if ($null -ne $_.Exception.Response) {
-                $statusCode = $_.Exception.Response.StatusCode.value__
-                if ($null -ne $_.Exception.Response.Headers) {
-                    $retryAfter = $_.Exception.Response.Headers["Retry-After"]
-                }
-            }
+        $job = Start-Job -ScriptBlock {
+            param($url, $hdrs)
 
-            if ($statusCode -eq 429) {
-                Write-Host "Request $sent => 429 | Retry-After: $retryAfter sec" -ForegroundColor Red
+            try {
+                Invoke-WebRequest `
+                    -Uri $url `
+                    -Method GET `
+                    -Headers $hdrs `
+                    -UseBasicParsing `
+                    -TimeoutSec 60 | Out-Null
             }
-            else {
-                Write-Host "Request $sent => ERROR ($statusCode)" -ForegroundColor Magenta
+            catch {
+                # expected: 429, network throttling, etc.
             }
-        }
-        finally {
-            $sent++
-            $error.Clear()
+        } -ArgumentList $endpoint, $headers
 
-            # --- HIGHLIGHTED CHANGE 4: Micro-Throttle ---
-            # A tiny pause (10ms) helps the OS manage the network buffer 
-            # without significantly slowing down your burst test.
-            Start-Sleep -Milliseconds 10            
-        }
+        $runningJobs += $job
+        $sent++
     }
 
-    Write-Host "Batch dispatched" -ForegroundColor Cyan
-    # --- CRITICAL ADDITION FOR CELERON ---
-    # This stops the background processes and closes the powershell.exe instances
-    Get-Job | Stop-Job
-    Get-Job | Remove-Job
-    # -------------------------------------
-    Write-Host "Batch cleanup completed. Short pause..."
+    Write-Host "Batch dispatched | Active jobs: $($runningJobs.Count)" -ForegroundColor Cyan
+
+    # -------------------------
+    # SOFT CLEANUP ONLY (NO STOP)
+    # -------------------------
+    $runningJobs = $runningJobs | Where-Object {
+
+        if ($_.State -eq "Completed") {
+            try {
+                Receive-Job $_ | Out-Null
+            } catch {}
+
+            Remove-Job $_ | Out-Null
+            return $false
+        }
+
+        return $true
+    }
+
+    Write-Host "Batch cleanup completed. Short pause..." -ForegroundColor Gray
 
     Start-Sleep -Milliseconds $delayMs
 }
 
-$endDate = Get-Date;
+# ===============================
+# FINAL DRAIN (IMPORTANT)
+# ===============================
+Write-Host "`nFinal drain started..."
+
+if ($runningJobs.Count -gt 0) {
+    $runningJobs | Wait-Job | Out-Null
+    $runningJobs | Receive-Job | Out-Null
+    $runningJobs | Remove-Job | Out-Null
+}
+
+$runningJobs = @()
+
+# ===============================
+# REPORT
+# ===============================
+$endDate = Get-Date
 $duration = $endDate - $startTime
-Write-Host "Test Completed in : $($duration.ToString()), at $endDate.ToString(), at $endDate.ToString()" -ForegroundColor Cyan
+
+Write-Host "`nTest Completed in: $($duration.ToString()) at $($endDate.ToString())" -ForegroundColor Cyan

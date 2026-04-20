@@ -1,8 +1,11 @@
-# JWT Login Load Generator (NO 429)
+# =========================
+# JWT Login Load Generator (stable, no job killing)
+# =========================
+
 $startTime = Get-Date
 
 $scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
-Write-Host "Running Script: $scriptName, started at $startTime.ToString()"
+Write-Host "Running Script: $scriptName, started at $($startTime.ToString())"
 
 $loginUrl = "https://samwin-umlaut-converter-api.onrender.com/auth/LoginWithPassword"
 
@@ -11,19 +14,28 @@ $users = @(
     @{ userName = "behrs";     password = "behrs@1234" }
 )
 
-$batchSize = 10       # safely under 15
-$rateLimiterDelaySec = 10        # matches rate limiter window
+$batchSize = 10              # safe under rate limiter
+$rateLimiterDelaySec = 10
 $totalRequests = 100
 
 $sent = 0
+$runningJobs = @()
 
-Write-Host "Starting JWT login simulation (no throttling expected)..." -ForegroundColor Green
+Write-Host "Starting JWT login simulation (stable load pattern)..." -ForegroundColor Green
 
+# =========================
+# MAIN LOOP
+# =========================
 while ($sent -lt $totalRequests) {
 
-    Write-Host "Dispatching batch starting at $sent" -ForegroundColor Cyan
+    Write-Host "`nDispatching batch starting at $sent" -ForegroundColor Cyan
 
+    # -------------------------
+    # BURST BATCH
+    # -------------------------
     1..$batchSize | ForEach-Object {
+
+        if ($sent -ge $totalRequests) { return }
 
         $user = $users[$sent % 2]
 
@@ -32,41 +44,69 @@ while ($sent -lt $totalRequests) {
             password = $user.password
         } | ConvertTo-Json
 
-        Start-Job -ScriptBlock {
+        $job = Start-Job -ScriptBlock {
             param($url, $payload)
+
             try {
                 Invoke-RestMethod `
                     -Uri $url `
                     -Method Post `
                     -ContentType "application/json" `
-                    -Body $payload | Out-Null
+                    -Body $payload `
+                    -TimeoutSec 60 | Out-Null
             }
-            catch {}
-            finally {
-                $error.Clear()
-                # --- HIGHLIGHTED CHANGE 4: Micro-Throttle ---
-                # A tiny pause (10ms) helps the OS manage the network buffer 
-                # without significantly slowing down your burst test.
-                Start-Sleep -Milliseconds 100                  
+            catch {
+                # ignore for load testing
             }
-        } -ArgumentList $loginUrl, $body | Out-Null
+        } -ArgumentList $loginUrl, $body
 
+        $runningJobs += $job
         $sent++
-
-        if ($sent -ge $totalRequests) {
-            break 
-        }
     }
-    Write-Host "Batch dispatched" -ForegroundColor Yellow
-    # --- CRITICAL ADDITION FOR CELERON ---
-    # This stops the background processes and closes the powershell.exe instances
-    Get-Job | Stop-Job
-    Get-Job | Remove-Job
-    # -------------------------------------
-    Write-Host "Batch cleanup completed. Waiting $rateLimiterDelaySec sec..."
-    
+
+    Write-Host "Batch dispatched. Active jobs: $($runningJobs.Count)" -ForegroundColor Yellow
+
+    # -------------------------
+    # SOFT CLEANUP (NO Stop-Job)
+    # -------------------------
+    $runningJobs = $runningJobs | Where-Object {
+
+        if ($_.State -eq "Completed") {
+            try {
+                Receive-Job $_ | Out-Null
+            } catch {}
+
+            Remove-Job $_ | Out-Null
+            return $false
+        }
+
+        return $true
+    }
+
+    # -------------------------
+    # RATE LIMIT WINDOW
+    # -------------------------
+    Write-Host "Waiting $rateLimiterDelaySec sec for rate limiter window..."
     Start-Sleep -Seconds $rateLimiterDelaySec
 }
-$endDate = Get-Date;
+
+# =========================
+# FINAL DRAIN (IMPORTANT)
+# =========================
+Write-Host "`nFinal drain started..."
+
+if ($runningJobs.Count -gt 0) {
+    $runningJobs | Wait-Job | Out-Null
+    $runningJobs | Receive-Job | Out-Null
+    $runningJobs | Remove-Job | Out-Null
+}
+
+$runningJobs = @()
+
+# =========================
+# END REPORT
+# =========================
+$endDate = Get-Date
 $duration = $endDate - $startTime
-Write-Host "Login load simulation completed (no 429 expected) in : $($duration.ToString()), at $endDate.ToString()" -ForegroundColor Green
+
+Write-Host "`nJWT login simulation completed in: $($duration.ToString()) at $($endDate.ToString())" -ForegroundColor Green
