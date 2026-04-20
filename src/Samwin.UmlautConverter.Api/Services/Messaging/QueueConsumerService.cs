@@ -30,8 +30,9 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                     try
                     {
                         _logger.LogInformation("Initializing RabbitMQ consumer for 'my_demo_queue'...");
-
+                        await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                         await _messageBusClient.ConsumeMessagesAsync(stoppingToken);
+                        _logger.LogInformation("RabbitMQ consumer intialised ...");
 
                         // Wait indefinitely until the service is stopped
                         await Task.Delay(Timeout.Infinite, stoppingToken);
