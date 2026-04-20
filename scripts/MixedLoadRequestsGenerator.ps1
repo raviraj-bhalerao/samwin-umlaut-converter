@@ -1,6 +1,4 @@
-# =========================
-# Mixed traffic simulation (stable, no job killing)
-# =========================
+# Mixed traffic (NO 429, controlled batches - corrected)
 
 $startTime = Get-Date
 
@@ -15,20 +13,16 @@ $rateLimiterDelaySec = 10
 $totalRequests = 500
 
 $sent = 0
+
+# GLOBAL JOB LIST
 $runningJobs = @()
 
-Write-Host "Starting mixed traffic simulation (stable load pattern)..." -ForegroundColor Green
+Write-Host "Starting mixed traffic simulation (no 429 expected)..." -ForegroundColor Green
 
-# =========================
-# MAIN LOOP
-# =========================
 while ($sent -lt $totalRequests) {
 
-    Write-Host "`nDispatching batch starting at $sent" -ForegroundColor Cyan
+    Write-Host "Dispatching batch starting at $sent" -ForegroundColor Cyan
 
-    # -------------------------
-    # BURST BATCH
-    # -------------------------
     1..$batchSize | ForEach-Object {
 
         if ($sent -ge $totalRequests) { return }
@@ -46,8 +40,10 @@ while ($sent -lt $totalRequests) {
                     Invoke-RestMethod -Uri $eUrl -Method Get -ErrorAction Stop -TimeoutSec 60 | Out-Null
                 }
             }
-            catch {
-                # expected errors for simulation
+            catch {}
+            finally {
+                $error.Clear()
+                Start-Sleep -Milliseconds 100
             }
         } -ArgumentList $normalUrl, $errorUrl, $rand
 
@@ -55,34 +51,25 @@ while ($sent -lt $totalRequests) {
         $sent++
     }
 
-    Write-Host "Batch dispatched | Active jobs: $($runningJobs.Count)" -ForegroundColor Yellow
+    Write-Host "Batch dispatched (70% success / 30% error)" -ForegroundColor Yellow
 
-    # -------------------------
-    # SOFT CLEANUP ONLY
-    # -------------------------
+    # --- SOFT CLEANUP (ONLY COMPLETED JOBS) ---
     $runningJobs = $runningJobs | Where-Object {
-
         if ($_.State -eq "Completed") {
-            try {
-                Receive-Job $_ | Out-Null
-            } catch {}
-
+            try { Receive-Job $_ | Out-Null } catch {}
             Remove-Job $_ | Out-Null
             return $false
         }
-
         return $true
     }
 
-    # -------------------------
-    # RATE LIMIT WINDOW
-    # -------------------------
-    Write-Host "Waiting $rateLimiterDelaySec sec for rate limiter window..."
+    Write-Host "Batch cleanup (completed jobs only). Waiting $rateLimiterDelaySec sec..."
+
     Start-Sleep -Seconds $rateLimiterDelaySec
 }
 
 # =========================
-# FINAL DRAIN (IMPORTANT)
+# FINAL DRAIN
 # =========================
 Write-Host "`nFinal drain started..."
 
@@ -94,10 +81,7 @@ if ($runningJobs.Count -gt 0) {
 
 $runningJobs = @()
 
-# =========================
-# END REPORT
-# =========================
 $endDate = Get-Date
 $duration = $endDate - $startTime
 
-Write-Host "`nMixed traffic simulation completed in: $($duration.ToString()) at $($endDate.ToString())" -ForegroundColor Green
+Write-Host "Mixed traffic simulation completed (no 429) in: $($duration.ToString()), at $($endDate.ToString())" -ForegroundColor Green

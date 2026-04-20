@@ -1,6 +1,4 @@
-# =========================
-# Cache MISS generator (rate-limit aware, SSE-safe job handling)
-# =========================
+# Cache MISS generator (rate-limit aware - corrected)
 
 $startTime = Get-Date
 
@@ -9,26 +7,21 @@ Write-Host "Running Script: $scriptName, started at $($startTime.ToString())"
 
 $url = "https://samwin-umlaut-converter-api.onrender.com/QueryGenerator/GetQuery?useCache"
 
-$batchSize = 15              # intentionally near/above limit
-$rateLimiterDelaySec = 10    # matches server window
+$batchSize = 15
+$rateLimiterDelaySec = 10
 
 $totalRequests = 300
 $sent = 0
 
+# GLOBAL JOB LIST
 $runningJobs = @()
 
-Write-Host "Generating cache MISS load (controlled bursts)..." -ForegroundColor Green
+Write-Host "Generating cache misses (controlled batches)..." -ForegroundColor Green
 
-# =========================
-# MAIN LOOP
-# =========================
 while ($sent -lt $totalRequests) {
 
-    Write-Host "`nDispatching batch starting at $sent" -ForegroundColor Cyan
+    Write-Host "Dispatching batch starting at $sent" -ForegroundColor Cyan
 
-    # -------------------------
-    # BURST BATCH
-    # -------------------------
     1..$batchSize | ForEach-Object {
 
         if ($sent -ge $totalRequests) { return }
@@ -38,12 +31,13 @@ while ($sent -lt $totalRequests) {
 
         $job = Start-Job -ScriptBlock {
             param($u)
-
             try {
                 Invoke-WebRequest -Uri $u -Method Get -UseBasicParsing -TimeoutSec 60 | Out-Null
             }
-            catch {
-                # ignore for load test
+            catch {}
+            finally {
+                $error.Clear()
+                Start-Sleep -Milliseconds 100
             }
         } -ArgumentList $fullUrl
 
@@ -51,34 +45,25 @@ while ($sent -lt $totalRequests) {
         $sent++
     }
 
-    Write-Host "Batch dispatched. Active jobs: $($runningJobs.Count)" -ForegroundColor Yellow
+    Write-Host "Batch dispatched (expect cache MISS + some 429)" -ForegroundColor Yellow
 
-    # -------------------------
-    # SOFT CLEANUP (NO STOP)
-    # -------------------------
+    # --- SOFT CLEANUP (ONLY COMPLETED JOBS) ---
     $runningJobs = $runningJobs | Where-Object {
-
         if ($_.State -eq "Completed") {
-            try {
-                Receive-Job $_ | Out-Null
-            } catch {}
-
+            try { Receive-Job $_ | Out-Null } catch {}
             Remove-Job $_ | Out-Null
             return $false
         }
-
         return $true
     }
 
-    # -------------------------
-    # RATE LIMIT WINDOW
-    # -------------------------
-    Write-Host "Waiting $rateLimiterDelaySec sec for rate limiter window..."
+    Write-Host "Batch cleanup (completed jobs only). Waiting $rateLimiterDelaySec sec..."
+
     Start-Sleep -Seconds $rateLimiterDelaySec
 }
 
 # =========================
-# FINAL DRAIN (IMPORTANT)
+# FINAL DRAIN
 # =========================
 Write-Host "`nFinal drain started..."
 
@@ -90,10 +75,7 @@ if ($runningJobs.Count -gt 0) {
 
 $runningJobs = @()
 
-# =========================
-# END REPORT
-# =========================
 $endDate = Get-Date
 $duration = $endDate - $startTime
 
-Write-Host "`nCache miss metrics generation completed in: $($duration.ToString()) at $($endDate.ToString())"
+Write-Host "Cache miss metrics generation completed in: $($duration.ToString()), at $($endDate.ToString())"

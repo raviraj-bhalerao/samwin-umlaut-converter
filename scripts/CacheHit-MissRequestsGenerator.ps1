@@ -1,7 +1,4 @@
-# =========================
-# Cache lifecycle simulation (MISS → HIT → EVICTION)
-# =========================
-
+# Cache lifecycle simulation (MISS → HIT → EVICTION → MISS)
 $startTime = Get-Date
 
 $scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
@@ -16,90 +13,86 @@ $inputs = @(
     "knoedlbuegel", "spaetbloeher", "muehlstueck"
 )
 
+$cacheEvictionDurationInSeconds = 60
 $query = ($inputs | ForEach-Object { "input=$_" }) -join "&"
 $fullUrl = "$url&$query"
 
 Write-Host "Starting cache lifecycle simulation..."
 
-# =========================
-# CONFIG
-# =========================
-$cycleCount = 5
-
-# Based on observed behavior:
-# 15 SSE streams × ~12 sec each ≈ ~180 sec total
-$cycleCutoffSeconds = 220   # safe buffer (3.5 min)
-$evictionSeconds = 60
-
+# GLOBAL JOB LIST (across cycles)
 $runningJobs = @()
 
-# =========================
-# MAIN LOOP
-# =========================
-for ($cycle = 1; $cycle -le $cycleCount; $cycle++) {
+for ($cycle = 1; $cycle -le 5; $cycle++) {
 
-    Write-Host "`nCycle $cycle - dispatching request"
+    Write-Host "`nCycle $cycle - dispatching requests"
 
-    # -------------------------
-    # Start SINGLE SSE request
-    # -------------------------
-    $job = Start-Job -ScriptBlock {
-        param($u)
+    $batchSize = 15
+    $rateLimiterDelaySec = 10
 
-        try {
-            Invoke-WebRequest -Uri $u -Method Get -UseBasicParsing -TimeoutSec 300 | Out-Null
-        }
-        catch {
-            # ignore errors for load test
-        }
-    } -ArgumentList $fullUrl
+    $totalRequests = 100
+    $sent = 0
 
-    $runningJobs += $job
+    while ($sent -lt $totalRequests) {
 
-    Write-Host "Request started. Waiting for SSE completion (~$cycleCutoffSeconds sec)..."
+        Write-Host "Dispatching batch starting at $sent" -ForegroundColor Cyan
 
-    # -------------------------
-    # CYCLE WAIT + SOFT CLEANUP
-    # -------------------------
-    $elapsed = 0
-    $cleanupInterval = 10
+        1..$batchSize | ForEach-Object {
 
-    while ($elapsed -lt $cycleCutoffSeconds) {
+            if ($sent -ge $totalRequests) { return }
 
-        Start-Sleep -Seconds $cleanupInterval
-        $elapsed += $cleanupInterval
-
-        # remove only completed jobs (NON-BLOCKING)
-        $runningJobs = $runningJobs | Where-Object {
-
-            if ($_.State -eq "Completed") {
+            $job = Start-Job -ScriptBlock {
+                param($u)
                 try {
-                    Receive-Job $_ | Out-Null
-                } catch {}
+                    Invoke-WebRequest -Uri $u -Method Get -UseBasicParsing -TimeoutSec 300 | Out-Null
+                }
+                catch {}
+                finally {
+                    $error.Clear()
+                    Start-Sleep -Milliseconds 100
+                }
+            } -ArgumentList $fullUrl
 
+            $runningJobs += $job
+            $sent++
+        }
+
+        Write-Host "Batch dispatched." -ForegroundColor Yellow
+
+        # --- SOFT CLEANUP (ONLY COMPLETED JOBS) ---
+        $runningJobs = $runningJobs | Where-Object {
+            if ($_.State -eq "Completed") {
+                try { Receive-Job $_ | Out-Null } catch {}
                 Remove-Job $_ | Out-Null
                 return $false
             }
-
             return $true
         }
 
-        Write-Host "Cycle $cycle | ${elapsed}s elapsed | Active jobs: $($runningJobs.Count)"
+        Write-Host "Batch cleanup (completed jobs only). Waiting $rateLimiterDelaySec sec..."
+
+        Start-Sleep -Seconds $rateLimiterDelaySec
     }
 
-    Write-Host "Cycle $cycle completed (no forced drain here)"
+    Write-Host "Cycle $cycle - requests dispatched"
 
-    # -------------------------
-    # CACHE EVICTION WAIT
-    # -------------------------
-    if ($cycle -lt $cycleCount) {
-        Write-Host "Waiting $evictionSeconds seconds for cache eviction..."
-        Start-Sleep -Seconds $evictionSeconds
+    # --- END OF CYCLE CLEANUP (ONLY COMPLETED, NO WAIT) ---
+    $runningJobs = $runningJobs | Where-Object {
+        if ($_.State -eq "Completed") {
+            try { Receive-Job $_ | Out-Null } catch {}
+            Remove-Job $_ | Out-Null
+            return $false
+        }
+        return $true
+    }
+
+    if ($cycle -lt 5) {
+        Write-Host "Waiting $cacheEvictionDurationInSeconds seconds for cache eviction..."
+        Start-Sleep -Seconds $cacheEvictionDurationInSeconds
     }
 }
 
 # =========================
-# FINAL DRAIN (IMPORTANT)
+# FINAL DRAIN (ONLY HERE)
 # =========================
 Write-Host "`nFinal drain started..."
 
@@ -111,10 +104,7 @@ if ($runningJobs.Count -gt 0) {
 
 $runningJobs = @()
 
-# =========================
-# END REPORT
-# =========================
 $endDate = Get-Date
 $duration = $endDate - $startTime
 
-Write-Host "`nSimulation completed in: $($duration.ToString()) at $($endDate.ToString())"
+Write-Host "Simulation completed in: $($duration.ToString()), at $($endDate.ToString())"

@@ -18,11 +18,10 @@ $token = ""
 # INTERACTIVE MODE
 # ===============================
 if ($i) {
-    $baseUrlInput = Read-Host "Enter base URL (Enter = default)"
+    $baseUrlInput = Read-Host "Enter base URL (press Enter for default: $defaultBaseUrl)"
     if (-not [string]::IsNullOrWhiteSpace($baseUrlInput)) {
         $baseUrl = $baseUrlInput
     }
-
     $token = Read-Host "Enter JWT token"
 }
 else {
@@ -35,13 +34,14 @@ $endpoint = "$baseUrl/WeatherForecast"
 # TEST SETTINGS
 # ===============================
 $totalRequests = 100
-$batchSize = 30       # intentionally > 15 to trigger 429
+$batchSize = 30
 $delayMs = 2000
 $sent = 0
 
+# GLOBAL JOB LIST
 $runningJobs = @()
 
-Write-Host "`nStarting Rate Limit Test (Expect 429 bursts)..." -ForegroundColor Cyan
+Write-Host "`nStarting Rate Limit Test (Expect heavy 429)..." -ForegroundColor Cyan
 Write-Host "Endpoint: $endpoint"
 Write-Host "Total Requests: $totalRequests"
 Write-Host "Batch Size: $batchSize`n"
@@ -53,9 +53,6 @@ while ($sent -lt $totalRequests) {
 
     Write-Host "Dispatching burst starting at $sent" -ForegroundColor Yellow
 
-    # -------------------------
-    # BURST REQUESTS
-    # -------------------------
     1..$batchSize | ForEach-Object {
 
         if ($sent -ge $totalRequests) { return }
@@ -65,8 +62,10 @@ while ($sent -lt $totalRequests) {
             $headers["Authorization"] = "Bearer $token"
         }
 
+        $currentIndex = $sent
+
         $job = Start-Job -ScriptBlock {
-            param($url, $hdrs)
+            param($url, $hdrs, $idx)
 
             try {
                 Invoke-WebRequest `
@@ -75,49 +74,94 @@ while ($sent -lt $totalRequests) {
                     -Headers $hdrs `
                     -UseBasicParsing `
                     -TimeoutSec 60 | Out-Null
+
+                Write-Output "Request $idx => 200"
             }
             catch {
-                # expected: 429, network throttling, etc.
+                $statusCode = $null
+                $retryAfter = $null
+
+                if ($null -ne $_.Exception.Response) {
+                    $statusCode = $_.Exception.Response.StatusCode.value__
+                    if ($null -ne $_.Exception.Response.Headers) {
+                        $retryAfter = $_.Exception.Response.Headers["Retry-After"]
+                    }
+                }
+
+                if ($statusCode -eq 429) {
+                    Write-Output "Request $idx => 429 | Retry-After: $retryAfter sec"
+                }
+                else {
+                    Write-Output "Request $idx => ERROR ($statusCode)"
+                }
             }
-        } -ArgumentList $endpoint, $headers
+        } -ArgumentList $endpoint, $headers, $currentIndex
 
         $runningJobs += $job
         $sent++
     }
 
-    Write-Host "Batch dispatched | Active jobs: $($runningJobs.Count)" -ForegroundColor Cyan
+    Write-Host "Batch dispatched" -ForegroundColor Cyan
 
-    # -------------------------
-    # SOFT CLEANUP ONLY (NO STOP)
-    # -------------------------
-    $runningJobs = $runningJobs | Where-Object {
+    # --- SOFT CLEANUP (ONLY COMPLETED JOBS) ---
+    $remainingJobs = @()
 
-        if ($_.State -eq "Completed") {
+    foreach ($job in $runningJobs) {
+        if ($job.State -eq "Completed") {
             try {
-                Receive-Job $_ | Out-Null
+                $output = Receive-Job $job
+                foreach ($line in $output) {
+                    if ($line -match "429") {
+                        Write-Host $line -ForegroundColor Red
+                    }
+                    elseif ($line -match "200") {
+                        Write-Host $line -ForegroundColor Green
+                    }
+                    else {
+                        Write-Host $line -ForegroundColor Magenta
+                    }
+                }
             } catch {}
 
-            Remove-Job $_ | Out-Null
-            return $false
+            Remove-Job $job | Out-Null
         }
-
-        return $true
+        else {
+            $remainingJobs += $job
+        }
     }
 
-    Write-Host "Batch cleanup completed. Short pause..." -ForegroundColor Gray
+    $runningJobs = $remainingJobs
 
+    Write-Host "Batch cleanup (completed jobs only). Short pause..."
     Start-Sleep -Milliseconds $delayMs
 }
 
 # ===============================
-# FINAL DRAIN (IMPORTANT)
+# FINAL DRAIN
 # ===============================
 Write-Host "`nFinal drain started..."
 
 if ($runningJobs.Count -gt 0) {
     $runningJobs | Wait-Job | Out-Null
-    $runningJobs | Receive-Job | Out-Null
-    $runningJobs | Remove-Job | Out-Null
+
+    foreach ($job in $runningJobs) {
+        try {
+            $output = Receive-Job $job
+            foreach ($line in $output) {
+                if ($line -match "429") {
+                    Write-Host $line -ForegroundColor Red
+                }
+                elseif ($line -match "200") {
+                    Write-Host $line -ForegroundColor Green
+                }
+                else {
+                    Write-Host $line -ForegroundColor Magenta
+                }
+            }
+        } catch {}
+
+        Remove-Job $job | Out-Null
+    }
 }
 
 $runningJobs = @()
@@ -128,4 +172,4 @@ $runningJobs = @()
 $endDate = Get-Date
 $duration = $endDate - $startTime
 
-Write-Host "`nTest Completed in: $($duration.ToString()) at $($endDate.ToString())" -ForegroundColor Cyan
+Write-Host "Test Completed in: $($duration.ToString()), at $($endDate.ToString())" -ForegroundColor Cyan
