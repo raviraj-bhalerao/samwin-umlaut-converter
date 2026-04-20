@@ -11,7 +11,7 @@ function Cleanup-CompletedJobs {
         if ($_.State -eq "Completed") {
             try { Receive-Job $_ | Out-Null } catch {}
             Remove-Job $_ | Out-Null
-            $script:removedCount++
+            $removedCount++
             return $false
         }
         return $true
