@@ -105,16 +105,21 @@ while ($sent -lt $totalRequests) {
     Write-Host "Batch dispatched | Total sent so far: $sent" -ForegroundColor Cyan
 
     # ===============================
-    # SOFT CLEANUP (ONLY COMPLETED JOBS)
+    # SOFT CLEANUP (ROBUST)
     # ===============================
     $remainingJobs = @()
     $beforeCount = $runningJobs.Count
     $removedCount = 0
 
     foreach ($job in $runningJobs) {
-        if ($job.State -eq "Completed") {
+
+        $state = $job.State
+
+        if ($state -in @("Completed", "Failed", "Stopped")) {
+
             try {
-                $output = Receive-Job $job
+                $output = Receive-Job $job -ErrorAction SilentlyContinue
+
                 foreach ($line in $output) {
                     if ($line -match "429") {
                         Write-Host $line -ForegroundColor Red
@@ -129,7 +134,8 @@ while ($sent -lt $totalRequests) {
             }
             catch {}
 
-            Remove-Job $job | Out-Null
+            try { Remove-Job $job -Force -ErrorAction SilentlyContinue } catch {}
+
             $removedCount++
         }
         else {
@@ -141,7 +147,6 @@ while ($sent -lt $totalRequests) {
     $afterCount = $runningJobs.Count
 
     Write-Host "Batch cleanup: Removed $removedCount | Remaining running jobs: $afterCount (was $beforeCount)" -ForegroundColor DarkGray
-
     Start-Sleep -Milliseconds $delayMs
 }
 
@@ -161,9 +166,13 @@ while ($runningJobs.Count -gt 0) {
 
     foreach ($job in $runningJobs) {
 
-        if ($job.State -eq "Completed") {
+        $state = $job.State
+
+        if ($state -in @("Completed", "Failed", "Stopped")) {
+
             try {
-                $output = Receive-Job $job
+                $output = Receive-Job $job -ErrorAction SilentlyContinue
+
                 foreach ($line in $output) {
                     if ($line -match "429") {
                         Write-Host $line -ForegroundColor Red
@@ -178,7 +187,8 @@ while ($runningJobs.Count -gt 0) {
             }
             catch {}
 
-            Remove-Job $job | Out-Null
+            try { Remove-Job $job -Force -ErrorAction SilentlyContinue } catch {}
+
             $removedThisRound++
             $removedTotal++
         }
@@ -192,7 +202,7 @@ while ($runningJobs.Count -gt 0) {
     Write-Host "Drain progress: Removed $removedTotal / $totalJobs | Remaining: $($runningJobs.Count)" -ForegroundColor DarkGray
 
     if ($runningJobs.Count -gt 0) {
-        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 3
     }
 }
 

@@ -9,9 +9,19 @@ function Cleanup-CompletedJobs {
     $remainingJobs = @()
 
     foreach ($job in $Jobs) {
-        if ($job.State -eq "Completed") {
-            try { Receive-Job $job | Out-Null } catch {}
-            Remove-Job $job | Out-Null
+
+        $state = $job.State
+
+        if ($state -in @("Completed", "Failed", "Stopped")) {
+
+            try {
+                Receive-Job $job -ErrorAction SilentlyContinue | Out-Null
+            } catch {}
+
+            try {
+                Remove-Job $job -Force -ErrorAction SilentlyContinue | Out-Null
+            } catch {}
+
             $removedCount++
         }
         else {
@@ -21,11 +31,10 @@ function Cleanup-CompletedJobs {
 
     $afterCount = $remainingJobs.Count
 
-    Write-Host "$Label : Removed $removedCount completed jobs | Remaining: $afterCount (was $beforeCount)" -ForegroundColor DarkGray
+    Write-Host "$Label : Removed $removedCount jobs (Completed/Failed/Stopped) | Remaining: $afterCount (was $beforeCount)" -ForegroundColor DarkGray
 
     return ,$remainingJobs
-}
-function Drain-AllJobs {
+}function Drain-AllJobs {
     param(
         [array]$Jobs
     )
@@ -41,31 +50,44 @@ function Drain-AllJobs {
     $total = $Jobs.Count
     $removedTotal = 0
 
-    while ($remainingJobs.Count -gt 0) {
+    while ($true) {
 
-        $currentRemaining = @()
+        $nextRound = @()
         $removedThisRound = 0
 
         foreach ($job in $remainingJobs) {
 
-            if ($job.State -eq "Completed") {
-                try { Receive-Job $job | Out-Null } catch {}
-                Remove-Job $job | Out-Null
+            # Force refresh state (VERY IMPORTANT)
+            $state = $job.State
+
+            if ($state -in @("Completed", "Failed", "Stopped")) {
+
+                try {
+                    Receive-Job $job -ErrorAction SilentlyContinue | Out-Null
+                } catch {}
+
+                try {
+                    Remove-Job $job -Force -ErrorAction SilentlyContinue | Out-Null
+                } catch {}
+
                 $removedThisRound++
                 $removedTotal++
             }
             else {
-                $currentRemaining += $job
+                $nextRound += $job
             }
         }
 
-        $remainingJobs = $currentRemaining
+        $remainingJobs = $nextRound
 
         Write-Host "Drain progress: Removed $removedTotal / $total | Remaining: $($remainingJobs.Count)" -ForegroundColor DarkGray
 
-        if ($remainingJobs.Count -gt 0) {
-            Start-Sleep -Seconds 5
+        if ($remainingJobs.Count -eq 0) {
+            break
         }
+
+        # IMPORTANT: give scheduler time to update states
+        Start-Sleep -Seconds 2
     }
 
     Write-Host "Final drain completed. Removed all $total jobs." -ForegroundColor Green
