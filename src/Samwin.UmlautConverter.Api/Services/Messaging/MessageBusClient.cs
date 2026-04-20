@@ -221,7 +221,7 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                                 }
                                 else
                                 {
-                                    _logger.LogWarning("Messge Processing skipped and no consumer registered for {id}", message.ConsumerId.ToString("D"));
+                                    _logger.LogWarning("Message Processing skipped as no consumer registered for {id}", message.ConsumerId.ToString("D"));
                                 }
                             }
                         }
