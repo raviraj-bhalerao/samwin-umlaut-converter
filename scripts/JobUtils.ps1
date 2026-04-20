@@ -6,15 +6,17 @@ function Cleanup-CompletedJobs {
 
     $beforeCount = $Jobs.Count
     $removedCount = 0
+    $remainingJobs = @()
 
-    $remainingJobs = $Jobs | Where-Object {
-        if ($_.State -eq "Completed") {
-            try { Receive-Job $_ | Out-Null } catch {}
-            Remove-Job $_ | Out-Null
+    foreach ($job in $Jobs) {
+        if ($job.State -eq "Completed") {
+            try { Receive-Job $job | Out-Null } catch {}
+            Remove-Job $job | Out-Null
             $removedCount++
-            return $false
         }
-        return $true
+        else {
+            $remainingJobs += $job
+        }
     }
 
     $afterCount = $remainingJobs.Count
