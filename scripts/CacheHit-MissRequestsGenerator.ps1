@@ -44,15 +44,14 @@ for ($cycle = 1; $cycle -le 5; $cycle++) {
                     Invoke-WebRequest -Uri $u -Method Get -UseBasicParsing -TimeoutSec 10 | Out-Null
                 }
                 catch {}
-            finally {
-                $error.Clear()
-                Start-Sleep -Milliseconds 10                    
-            }
+                finally {
+                    $error.Clear()
+                    Start-Sleep -Milliseconds 100
+                }
             } -ArgumentList $fullUrl | Out-Null
 
-            if ($sent -ge $totalRequests) {break}
+            if ($sent -ge $totalRequests) { break }
         }
-
         Write-Host "Batch dispatched." -ForegroundColor Yellow
         # --- CRITICAL ADDITION FOR CELERON ---
         # This stops the background processes and closes the powershell.exe instances

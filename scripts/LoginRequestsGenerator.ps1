@@ -47,7 +47,7 @@ while ($sent -lt $totalRequests) {
                 # --- HIGHLIGHTED CHANGE 4: Micro-Throttle ---
                 # A tiny pause (10ms) helps the OS manage the network buffer 
                 # without significantly slowing down your burst test.
-                Start-Sleep -Milliseconds 10                    
+                Start-Sleep -Milliseconds 100                  
             }
         } -ArgumentList $loginUrl, $body | Out-Null
 
