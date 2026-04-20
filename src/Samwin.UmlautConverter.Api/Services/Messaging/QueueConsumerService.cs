@@ -43,7 +43,7 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "RabbitMQ connection or consumption failed. Retrying in 5 seconds...");
+                        _logger.LogError(ex, "RabbitMQ connection or consumption failed. Retrying in 5 seconds... - {errorMessage}", ex.Message);
                         await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken); // Wait before retrying
                     }
                 }

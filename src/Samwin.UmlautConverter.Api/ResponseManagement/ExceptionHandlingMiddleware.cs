@@ -28,7 +28,7 @@ namespace Samwin.UmlautConverter.Api.ResponseManagement
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception");
+                _logger.LogError(ex, "Unhandled exception - {errorMessage}", ex.Message);
 
                 // Skip SSE
                 if (context.Response.ContentType?.Contains(SSE_CONTENT_TYPE) == true)

@@ -65,7 +65,7 @@ namespace Samwin.UmlautConverter.Api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Stream failed to start");
+                _logger.LogError(ex, "Stream failed to start - {errorMessage}", ex.Message);
                 exception = ex;
             }
             if (exception != null)
@@ -93,7 +93,7 @@ namespace Samwin.UmlautConverter.Api.Controllers
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Stream error");
+                        _logger.LogError(ex, "Stream error - {errorMessage}", ex.Message);
                         exception = ex;
                     }
                     if (exception != null)

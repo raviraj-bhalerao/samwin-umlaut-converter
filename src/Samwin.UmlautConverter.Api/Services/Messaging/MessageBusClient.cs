@@ -193,7 +193,7 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                         {
                             using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "ReceivedMessage" } }))
                             {
-                                _logger.LogInformation($"# of Inputs received and acknowledged: {message.Inputs.Length}");
+                                _logger.LogInformation("Inputs received: {Count}", message.Inputs.Length);
 
                                 using (IServiceScope scope = _scopeFactory.CreateScope())
                                 {
@@ -221,7 +221,7 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error processing RabbitMQ message.");
+                    _logger.LogError(ex, "Error processing RabbitMQ message - {errorMessage}", ex.Message);
                     unAckMessageDueToError = true;
                 }
                 finally

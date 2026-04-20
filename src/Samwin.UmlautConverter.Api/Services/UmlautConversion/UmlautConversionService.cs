@@ -78,7 +78,7 @@ namespace Samwin.UmlautConverter.Api.Services.UmlautConversion
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to publish message to message bus.");
+                _logger.LogError(ex, "Failed to publish message to message bus. - {errorMessage}", ex.Message);
             }
 
             return MergeStreams(cachedResults, getQueries(consumerId, inputsToPublish, useCache, clientDisconnectedToken));
