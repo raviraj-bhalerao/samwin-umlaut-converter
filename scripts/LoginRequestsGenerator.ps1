@@ -2,7 +2,7 @@
 $startTime = Get-Date
 
 $scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
-Write-Host "Running Script: $scriptName"
+Write-Host "Running Script: $scriptName, started at $startTime.ToString()"
 
 $loginUrl = "https://samwin-umlaut-converter-api.onrender.com/auth/LoginWithPassword"
 
@@ -12,7 +12,7 @@ $users = @(
 )
 
 $batchSize = 10       # safely under 15
-$delaySec = 10        # matches rate limiter window
+$rateLimiterDelaySec = 10        # matches rate limiter window
 $totalRequests = 100
 
 $sent = 0
@@ -42,14 +42,31 @@ while ($sent -lt $totalRequests) {
                     -Body $payload | Out-Null
             }
             catch {}
+            finally {
+                $error.Clear()
+                # --- HIGHLIGHTED CHANGE 4: Micro-Throttle ---
+                # A tiny pause (10ms) helps the OS manage the network buffer 
+                # without significantly slowing down your burst test.
+                Start-Sleep -Milliseconds 10                    
+            }
         } -ArgumentList $loginUrl, $body | Out-Null
 
         $sent++
-        if ($sent -ge $totalRequests) { break }
-    }
 
-    Write-Host "Batch completed - waiting for rate window reset..." -ForegroundColor Yellow
-    Start-Sleep -Seconds $delaySec
+        if ($sent -ge $totalRequests) {
+            break 
+        }
+    }
+    Write-Host "Batch dispatched" -ForegroundColor Yellow
+    # --- CRITICAL ADDITION FOR CELERON ---
+    # This stops the background processes and closes the powershell.exe instances
+    Get-Job | Stop-Job
+    Get-Job | Remove-Job
+    # -------------------------------------
+    Write-Host "Batch cleanup completed. Waiting $rateLimiterDelaySec sec..."
+    
+    Start-Sleep -Seconds $rateLimiterDelaySec
 }
-$duration = (Get-Date) - $startTime
-Write-Host "Login load simulation completed (no 429 expected) in : $($duration.ToString())" -ForegroundColor Green
+$endDate = Get-Date;
+$duration = $endDate - $startTime
+Write-Host "Login load simulation completed (no 429 expected) in : $($duration.ToString()), at $endDate.ToString()" -ForegroundColor Green

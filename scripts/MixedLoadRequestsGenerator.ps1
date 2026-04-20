@@ -2,13 +2,13 @@
 $startTime = Get-Date
 
 $scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
-Write-Host "Running Script: $scriptName"
+Write-Host "Running Script: $scriptName, started at $startTime.ToString()"
 
 $normalUrl = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast"
-$errorUrl  = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast?simulateError"
+$errorUrl = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast?simulateError"
 
 $batchSize = 10      # safely under 15
-$delaySec  = 10      # rate limiter window
+$rateLimiterDelaySec = 10      # rate limiter window
 $totalRequests = 500
 
 $sent = 0
@@ -35,6 +35,13 @@ while ($sent -lt $totalRequests) {
                 }
             }
             catch {}
+            finally {
+                $error.Clear()
+                # --- HIGHLIGHTED CHANGE 4: Micro-Throttle ---
+                # A tiny pause (10ms) helps the OS manage the network buffer 
+                # without significantly slowing down your burst test.
+                Start-Sleep -Milliseconds 10                    
+            }
         } -ArgumentList $normalUrl, $errorUrl, $rand | Out-Null
 
         $sent++
@@ -42,8 +49,15 @@ while ($sent -lt $totalRequests) {
     }
 
     Write-Host "Batch dispatched (70% success / 30% error)" -ForegroundColor Yellow
+    # --- CRITICAL ADDITION FOR CELERON ---
+    # This stops the background processes and closes the powershell.exe instances
+    Get-Job | Stop-Job
+    Get-Job | Remove-Job
+    # -------------------------------------
+    Write-Host "Batch cleanup completed. Waiting $rateLimiterDelaySec sec..."
 
-    Start-Sleep -Seconds $delaySec
+    Start-Sleep -Seconds $rateLimiterDelaySec
 }
-$duration = (Get-Date) - $startTime
-Write-Host "Mixed traffic simulation completed (no 429) in : $($duration.ToString())" -ForegroundColor Green
+$endDate = Get-Date;
+$duration = $endDate - $startTime
+Write-Host "Mixed traffic simulation completed (no 429) in : $($duration.ToString()), at $endDate.ToString()" -ForegroundColor Green
