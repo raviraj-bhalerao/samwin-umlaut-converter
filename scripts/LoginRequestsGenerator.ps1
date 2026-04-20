@@ -1,6 +1,9 @@
 # JWT Login Load Generator (NO 429)
 $startTime = Get-Date
 
+$scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
+Write-Host "Running Script: $scriptName"
+
 $loginUrl = "https://samwin-umlaut-converter-api.onrender.com/auth/LoginWithPassword"
 
 $users = @(

@@ -1,5 +1,9 @@
 # Cache MISS generator (rate-limit aware)
 $startTime = Get-Date
+
+$scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
+Write-Host "Running Script: $scriptName"
+
 $url = "https://samwin-umlaut-converter-api.onrender.com/QueryGenerator/GetQuery?useCache"
 
 $batchSize = 15     # >15 to trigger 429

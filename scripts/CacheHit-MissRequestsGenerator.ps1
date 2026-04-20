@@ -1,5 +1,9 @@
 # Cache lifecycle simulation (MISS → HIT → EVICTION → MISS)
 $startTime = Get-Date
+
+$scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
+Write-Host "Running Script: $scriptName"
+
 $url = "https://samwin-umlaut-converter-api.onrender.com/QueryGenerator/GetQuery?useCache"
 
 $inputs = @(

@@ -1,6 +1,9 @@
 # Mixed traffic (NO 429, controlled batches)
 $startTime = Get-Date
 
+$scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
+Write-Host "Running Script: $scriptName"
+
 $normalUrl = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast"
 $errorUrl  = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast?simulateError"
 

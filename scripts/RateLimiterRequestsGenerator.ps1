@@ -4,6 +4,9 @@
 
 $startTime = Get-Date
 
+$scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
+Write-Host "Running Script: $scriptName"
+
 $defaultBaseUrl = "https://samwin-umlaut-converter-api.onrender.com"
 
 $baseUrlInput = Read-Host "Enter base URL (press Enter for default: $defaultBaseUrl)"
