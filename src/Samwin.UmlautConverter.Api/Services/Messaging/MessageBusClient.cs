@@ -196,26 +196,32 @@ namespace Samwin.UmlautConverter.Api.Services.Messaging
                             using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "ReceivedMessage" } }))
                             {
                                 _logger.LogInformation("Inputs received: {Count}", message.Inputs.Length);
-
-                                using (IServiceScope scope = _scopeFactory.CreateScope())
+                                if (_consumerMessageReceivedHandlers.ContainsKey(message.ConsumerId))
                                 {
-                                    _metricsService.TokensConverted.Add(message.Inputs.Length);
-                                    var sqlQueryGenerator = scope.ServiceProvider.GetRequiredService<ISqlQueryGenerator<SqlQuery>>();
-
-                                    foreach (var input in message.Inputs)
+                                    using (IServiceScope scope = _scopeFactory.CreateScope())
                                     {
-                                        var sqlQueries = sqlQueryGenerator.Generate([input]);
-                                        _metricsService.QueriesGenerated.Add(sqlQueries.Count());
-                                        foreach (var sqlQuery in sqlQueries)
+                                        _metricsService.TokensConverted.Add(message.Inputs.Length);
+                                        var sqlQueryGenerator = scope.ServiceProvider.GetRequiredService<ISqlQueryGenerator<SqlQuery>>();
+
+                                        foreach (var input in message.Inputs)
                                         {
-                                            using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "PublishQuery" } }))
+                                            var sqlQueries = sqlQueryGenerator.Generate([input]);
+                                            _metricsService.QueriesGenerated.Add(sqlQueries.Count());
+                                            foreach (var sqlQuery in sqlQueries)
                                             {
-                                                _metricsService.VariationsCreated.Add(sqlQuery.Parameters.Count());
-                                                await Task.Delay(TimeSpan.FromSeconds(10));
-                                                this.RaiseMessageReceivedEvent(message.ConsumerId, input, sqlQuery.ToQueryString(), receiveMessageActivity!.Context);
+                                                using (_logger.BeginScope(new Dictionary<string, object> { { "Scope", "PublishQuery" } }))
+                                                {
+                                                    _metricsService.VariationsCreated.Add(sqlQuery.Parameters.Count());
+                                                    await Task.Delay(TimeSpan.FromSeconds(10));
+                                                    this.RaiseMessageReceivedEvent(message.ConsumerId, input, sqlQuery.ToQueryString(), receiveMessageActivity!.Context);
+                                                }
                                             }
                                         }
                                     }
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("Messge Processing skipped and no consumer registered for {id}", message.ConsumerId.ToString("D"));
                                 }
                             }
                         }
