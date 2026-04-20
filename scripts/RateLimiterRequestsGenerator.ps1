@@ -51,6 +51,7 @@ Write-Host "Batch Size: $batchSize`n"
 # ===============================
 while ($sent -lt $totalRequests) {
 
+    Write-Host "----------------------------------------" -ForegroundColor DarkGray
     Write-Host "Dispatching burst starting at $sent" -ForegroundColor Yellow
 
     1..$batchSize | ForEach-Object {
@@ -101,10 +102,14 @@ while ($sent -lt $totalRequests) {
         $sent++
     }
 
-    Write-Host "Batch dispatched" -ForegroundColor Cyan
+    Write-Host "Batch dispatched | Total sent so far: $sent" -ForegroundColor Cyan
 
-    # --- SOFT CLEANUP (ONLY COMPLETED JOBS) ---
+    # ===============================
+    # SOFT CLEANUP (ONLY COMPLETED JOBS)
+    # ===============================
     $remainingJobs = @()
+    $beforeCount = $runningJobs.Count
+    $removedCount = 0
 
     foreach ($job in $runningJobs) {
         if ($job.State -eq "Completed") {
@@ -121,9 +126,61 @@ while ($sent -lt $totalRequests) {
                         Write-Host $line -ForegroundColor Magenta
                     }
                 }
-            } catch {}
+            }
+            catch {}
 
             Remove-Job $job | Out-Null
+            $removedCount++
+        }
+        else {
+            $remainingJobs += $job
+        }
+    }
+
+    $runningJobs = $remainingJobs
+    $afterCount = $runningJobs.Count
+
+    Write-Host "Batch cleanup: Removed $removedCount | Remaining running jobs: $afterCount (was $beforeCount)" -ForegroundColor DarkGray
+
+    Start-Sleep -Milliseconds $delayMs
+}
+
+# ===============================
+# FINAL DRAIN (STREAMING)
+# ===============================
+Write-Host "`n========================================" -ForegroundColor DarkGray
+Write-Host "Final drain started. Remaining jobs: $($runningJobs.Count)" -ForegroundColor Cyan
+
+$totalJobs = $runningJobs.Count
+$removedTotal = 0
+
+while ($runningJobs.Count -gt 0) {
+
+    $remainingJobs = @()
+    $removedThisRound = 0
+
+    foreach ($job in $runningJobs) {
+
+        if ($job.State -eq "Completed") {
+            try {
+                $output = Receive-Job $job
+                foreach ($line in $output) {
+                    if ($line -match "429") {
+                        Write-Host $line -ForegroundColor Red
+                    }
+                    elseif ($line -match "200") {
+                        Write-Host $line -ForegroundColor Green
+                    }
+                    else {
+                        Write-Host $line -ForegroundColor Magenta
+                    }
+                }
+            }
+            catch {}
+
+            Remove-Job $job | Out-Null
+            $removedThisRound++
+            $removedTotal++
         }
         else {
             $remainingJobs += $job
@@ -132,39 +189,14 @@ while ($sent -lt $totalRequests) {
 
     $runningJobs = $remainingJobs
 
-    Write-Host "Batch cleanup (completed jobs only). Short pause..."
-    Start-Sleep -Milliseconds $delayMs
-}
+    Write-Host "Drain progress: Removed $removedTotal / $totalJobs | Remaining: $($runningJobs.Count)" -ForegroundColor DarkGray
 
-# ===============================
-# FINAL DRAIN
-# ===============================
-Write-Host "`nFinal drain started..."
-
-if ($runningJobs.Count -gt 0) {
-    $runningJobs | Wait-Job | Out-Null
-
-    foreach ($job in $runningJobs) {
-        try {
-            $output = Receive-Job $job
-            foreach ($line in $output) {
-                if ($line -match "429") {
-                    Write-Host $line -ForegroundColor Red
-                }
-                elseif ($line -match "200") {
-                    Write-Host $line -ForegroundColor Green
-                }
-                else {
-                    Write-Host $line -ForegroundColor Magenta
-                }
-            }
-        } catch {}
-
-        Remove-Job $job | Out-Null
+    if ($runningJobs.Count -gt 0) {
+        Start-Sleep -Seconds 5
     }
 }
 
-$runningJobs = @()
+Write-Host "Final drain completed. All jobs processed." -ForegroundColor Green
 
 # ===============================
 # REPORT
@@ -172,4 +204,4 @@ $runningJobs = @()
 $endDate = Get-Date
 $duration = $endDate - $startTime
 
-Write-Host "Test Completed in: $($duration.ToString()), at $($endDate.ToString())" -ForegroundColor Cyan
+Write-Host "`nTest Completed in: $($duration.ToString()), at $($endDate.ToString())" -ForegroundColor Cyan

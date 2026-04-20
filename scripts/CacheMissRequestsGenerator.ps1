@@ -1,3 +1,4 @@
+. "$PSScriptRoot\JobUtils.ps1"
 # Cache MISS generator (rate-limit aware - corrected)
 
 $startTime = Get-Date
@@ -48,14 +49,7 @@ while ($sent -lt $totalRequests) {
     Write-Host "Batch dispatched (expect cache MISS + some 429)" -ForegroundColor Yellow
 
     # --- SOFT CLEANUP (ONLY COMPLETED JOBS) ---
-    $runningJobs = $runningJobs | Where-Object {
-        if ($_.State -eq "Completed") {
-            try { Receive-Job $_ | Out-Null } catch {}
-            Remove-Job $_ | Out-Null
-            return $false
-        }
-        return $true
-    }
+    $runningJobs = Cleanup-CompletedJobs -Jobs $runningJobs -Label "Batch cleanup"
 
     Write-Host "Batch cleanup (completed jobs only). Waiting $rateLimiterDelaySec sec..."
 
@@ -65,13 +59,7 @@ while ($sent -lt $totalRequests) {
 # =========================
 # FINAL DRAIN
 # =========================
-Write-Host "`nFinal drain started..."
-
-if ($runningJobs.Count -gt 0) {
-    $runningJobs | Wait-Job | Out-Null
-    $runningJobs | Receive-Job | Out-Null
-    $runningJobs | Remove-Job | Out-Null
-}
+$runningJobs = Drain-AllJobs -Jobs $runningJobs
 
 $runningJobs = @()
 

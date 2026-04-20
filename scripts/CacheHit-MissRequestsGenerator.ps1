@@ -1,3 +1,4 @@
+. "$PSScriptRoot\JobUtils.ps1"
 # Cache lifecycle simulation (MISS → HIT → EVICTION → MISS)
 $startTime = Get-Date
 
@@ -59,16 +60,9 @@ for ($cycle = 1; $cycle -le 5; $cycle++) {
         Write-Host "Batch dispatched." -ForegroundColor Yellow
 
         # --- SOFT CLEANUP (ONLY COMPLETED JOBS) ---
-        $runningJobs = $runningJobs | Where-Object {
-            if ($_.State -eq "Completed") {
-                try { Receive-Job $_ | Out-Null } catch {}
-                Remove-Job $_ | Out-Null
-                return $false
-            }
-            return $true
-        }
+        $runningJobs = Cleanup-CompletedJobs -Jobs $runningJobs -Label "Batch cleanup"
 
-        Write-Host "Batch cleanup (completed jobs only). Waiting $rateLimiterDelaySec sec..."
+        Write-Host "Waiting $rateLimiterDelaySec sec..."
 
         Start-Sleep -Seconds $rateLimiterDelaySec
     }
@@ -76,14 +70,7 @@ for ($cycle = 1; $cycle -le 5; $cycle++) {
     Write-Host "Cycle $cycle - requests dispatched"
 
     # --- END OF CYCLE CLEANUP (ONLY COMPLETED, NO WAIT) ---
-    $runningJobs = $runningJobs | Where-Object {
-        if ($_.State -eq "Completed") {
-            try { Receive-Job $_ | Out-Null } catch {}
-            Remove-Job $_ | Out-Null
-            return $false
-        }
-        return $true
-    }
+    $runningJobs = Cleanup-CompletedJobs -Jobs $runningJobs -Label "Cycle cleanup"
 
     if ($cycle -lt 5) {
         Write-Host "Waiting $cacheEvictionDurationInSeconds seconds for cache eviction..."
@@ -94,13 +81,7 @@ for ($cycle = 1; $cycle -le 5; $cycle++) {
 # =========================
 # FINAL DRAIN (ONLY HERE)
 # =========================
-Write-Host "`nFinal drain started..."
-
-if ($runningJobs.Count -gt 0) {
-    $runningJobs | Wait-Job | Out-Null
-    $runningJobs | Receive-Job | Out-Null
-    $runningJobs | Remove-Job | Out-Null
-}
+$runningJobs = Drain-AllJobs -Jobs $runningJobs
 
 $runningJobs = @()
 

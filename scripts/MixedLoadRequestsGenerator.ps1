@@ -1,3 +1,4 @@
+. "$PSScriptRoot\JobUtils.ps1"
 # Mixed traffic (NO 429, controlled batches - corrected)
 
 $startTime = Get-Date
@@ -6,7 +7,7 @@ $scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
 Write-Host "Running Script: $scriptName, started at $($startTime.ToString())"
 
 $normalUrl = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast"
-$errorUrl  = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast?simulateError"
+$errorUrl = "https://samwin-umlaut-converter-api.onrender.com/WeatherForecast?simulateError"
 
 $batchSize = 10
 $rateLimiterDelaySec = 10
@@ -54,15 +55,7 @@ while ($sent -lt $totalRequests) {
     Write-Host "Batch dispatched (70% success / 30% error)" -ForegroundColor Yellow
 
     # --- SOFT CLEANUP (ONLY COMPLETED JOBS) ---
-    $runningJobs = $runningJobs | Where-Object {
-        if ($_.State -eq "Completed") {
-            try { Receive-Job $_ | Out-Null } catch {}
-            Remove-Job $_ | Out-Null
-            return $false
-        }
-        return $true
-    }
-
+    $runningJobs = Cleanup-CompletedJobs -Jobs $runningJobs -Label "Batch cleanup"
     Write-Host "Batch cleanup (completed jobs only). Waiting $rateLimiterDelaySec sec..."
 
     Start-Sleep -Seconds $rateLimiterDelaySec
@@ -71,13 +64,7 @@ while ($sent -lt $totalRequests) {
 # =========================
 # FINAL DRAIN
 # =========================
-Write-Host "`nFinal drain started..."
-
-if ($runningJobs.Count -gt 0) {
-    $runningJobs | Wait-Job | Out-Null
-    $runningJobs | Receive-Job | Out-Null
-    $runningJobs | Remove-Job | Out-Null
-}
+$runningJobs = Drain-AllJobs -Jobs $runningJobs
 
 $runningJobs = @()
 
