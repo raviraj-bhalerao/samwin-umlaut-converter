@@ -8,7 +8,7 @@ Param(
 $startTime = Get-Date
 $scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
 
-Write-Host "Running Script: $scriptName, started at $($startTime.ToString())"
+Write-Host "Running Script: $scriptName, started at $startTime"
 
 $defaultBaseUrl = "https://samwin-umlaut-converter-api.onrender.com"
 $baseUrl = $defaultBaseUrl
@@ -31,94 +31,155 @@ else {
 $endpoint = "$baseUrl/WeatherForecast"
 
 # ===============================
-# TEST SETTINGS
+# TEST SETTINGS (metrics-focused)
 # ===============================
-$totalRequests = 100
-$batchSize = 30
-$delayMs = 2000
-$sent = 0
+$totalRequests = 30
 
-# GLOBAL JOB LIST
+$windowSeconds = 10
+$targetPerWindow = 18        # intentionally ABOVE limiter (15) → generate 429s
+$intervalMs = [math]::Floor(($windowSeconds * 1000) / $targetPerWindow)
+
+$maxConcurrency = 25
+
+# burst model (small + realistic)
+$burstChance = 0.12
+$burstMin = 2
+$burstMax = 4
+
+$sent = 0
 $runningJobs = @()
 
-Write-Host "`nStarting Rate Limit Test (Expect heavy 429)..." -ForegroundColor Cyan
+Write-Host "Starting Rate Limit Metrics Simulation (expected 429s)..." -ForegroundColor Cyan
 Write-Host "Endpoint: $endpoint"
 Write-Host "Total Requests: $totalRequests"
-Write-Host "Batch Size: $batchSize`n"
 
 # ===============================
-# MAIN LOOP
+# MAIN LOOP (steady + overload + bursts)
 # ===============================
-while ($sent -lt $totalRequests) {
+for ($sent = 0; $sent -lt $totalRequests; ) {
 
-    Write-Host "----------------------------------------" -ForegroundColor DarkGray
-    Write-Host "Dispatching burst starting at $sent" -ForegroundColor Yellow
+    # -------------------------
+    # concurrency control
+    # -------------------------
+    while ($runningJobs.Count -ge $maxConcurrency) {
+        $runningJobs = Cleanup-CompletedJobs -Jobs $runningJobs -Label "Throttle cleanup"
+        Start-Sleep -Milliseconds 50
+    }
 
-    1..$batchSize | ForEach-Object {
+    # -------------------------
+    # headers
+    # -------------------------
+    $headers = @{}
+    if (-not [string]::IsNullOrWhiteSpace($token)) {
+        $headers["Authorization"] = "Bearer $token"
+    }
 
-        if ($sent -ge $totalRequests) { return }
+    $currentIndex = $sent
 
-        $headers = @{}
-        if (-not [string]::IsNullOrWhiteSpace($token)) {
-            $headers["Authorization"] = "Bearer $token"
+    # -------------------------
+    # request job
+    # -------------------------
+    $job = Start-Job -ScriptBlock {
+        param($url, $hdrs, $idx)
+
+        Start-Sleep -Milliseconds (Get-Random -Minimum 20 -Maximum 120)
+
+        try {
+            Invoke-WebRequest `
+                -Uri $url `
+                -Method GET `
+                -Headers $hdrs `
+                -UseBasicParsing `
+                -TimeoutSec 60 | Out-Null
+
+            Write-Output "Request $idx => 200"
+        }
+        catch {
+            $statusCode = $null
+            $retryAfter = $null
+
+            if ($null -ne $_.Exception.Response) {
+                $statusCode = $_.Exception.Response.StatusCode.value__
+                if ($_.Exception.Response.Headers) {
+                    $retryAfter = $_.Exception.Response.Headers["Retry-After"]
+                }
+            }
+
+            if ($statusCode -eq 429) {
+                Write-Output "Request $idx => 429 | Retry-After: $retryAfter sec"
+            }
+            else {
+                Write-Output "Request $idx => ERROR ($statusCode)"
+            }
         }
 
-        $currentIndex = $sent
+    } -ArgumentList $endpoint, $headers, $currentIndex
 
-        $job = Start-Job -ScriptBlock {
-            param($url, $hdrs, $idx)
+    $runningJobs += $job
+    $sent++
 
-            try {
-                Invoke-WebRequest `
-                    -Uri $url `
-                    -Method GET `
-                    -Headers $hdrs `
-                    -UseBasicParsing `
-                    -TimeoutSec 60 | Out-Null
+    # -------------------------
+    # controlled burst (adds realism, not spikes)
+    # -------------------------
+    if ((Get-Random -Minimum 1 -Maximum 101) -le ($burstChance * 100)) {
 
-                Write-Output "Request $idx => 200"
-            }
-            catch {
-                $statusCode = $null
-                $retryAfter = $null
+        $burstSize = Get-Random -Minimum $burstMin -Maximum ($burstMax + 1)
 
-                if ($null -ne $_.Exception.Response) {
-                    $statusCode = $_.Exception.Response.StatusCode.value__
-                    if ($null -ne $_.Exception.Response.Headers) {
-                        $retryAfter = $_.Exception.Response.Headers["Retry-After"]
+        Write-Host "Burst: $burstSize requests" -ForegroundColor Magenta
+
+        1..$burstSize | ForEach-Object {
+
+            $burstIndex = $sent
+
+            if ($sent -ge $totalRequests) { return }
+
+            Start-Sleep -Milliseconds (Get-Random -Minimum 20 -Maximum 90)
+
+            $burstJob = Start-Job -ScriptBlock {
+                param($url, $hdrs, $idx)
+
+                try {
+                    Invoke-WebRequest `
+                        -Uri $url `
+                        -Method GET `
+                        -Headers $hdrs `
+                        -UseBasicParsing `
+                        -TimeoutSec 60 | Out-Null
+
+                    Write-Output "Request $idx => 200"
+                }
+                catch {
+                    $statusCode = $null
+                    if ($_.Exception.Response) {
+                        $statusCode = $_.Exception.Response.StatusCode.value__
                     }
-                }
 
-                if ($statusCode -eq 429) {
-                    Write-Output "Request $idx => 429 | Retry-After: $retryAfter sec"
-                }
-                else {
                     Write-Output "Request $idx => ERROR ($statusCode)"
                 }
-            }
-        } -ArgumentList $endpoint, $headers, $currentIndex
 
-        $runningJobs += $job
-        $sent++
+            } -ArgumentList $endpoint, $headers, $burstIndex
+
+            $runningJobs += $burstJob
+            $sent++
+        }
     }
 
-    Write-Host "Batch dispatched | Total sent so far: $sent" -ForegroundColor Cyan
+    # -------------------------
+    # steady pacing + jitter (CRITICAL)
+    # -------------------------
+    $sleepMs = $intervalMs + (Get-Random -Minimum -100 -Maximum 150)
+    if ($sleepMs -lt 0) { $sleepMs = 0 }
 
-    # ===============================
-    # SOFT CLEANUP (ROBUST)
-    # ===============================
+    Start-Sleep -Milliseconds $sleepMs
+
+    # cleanup completed jobs
     $remainingJobs = @()
-    $beforeCount = $runningJobs.Count
-    $removedCount = 0
 
-    foreach ($job in $runningJobs) {
-
-        $state = $job.State
-
-        if ($state -in @("Completed", "Failed", "Stopped")) {
+    foreach ($jobItem in $runningJobs) {
+        if ($jobItem.State -in @("Completed", "Failed", "Stopped")) {
 
             try {
-                $output = Receive-Job $job -ErrorAction SilentlyContinue
+                $output = Receive-Job $jobItem -ErrorAction SilentlyContinue
 
                 foreach ($line in $output) {
                     if ($line -match "429") {
@@ -131,87 +192,24 @@ while ($sent -lt $totalRequests) {
                         Write-Host $line -ForegroundColor Magenta
                     }
                 }
-            }
-            catch {}
+            } catch {}
 
-            try { Remove-Job $job -Force -ErrorAction SilentlyContinue } catch {}
-
-            $removedCount++
+            Remove-Job $jobItem -Force -ErrorAction SilentlyContinue
         }
         else {
-            $remainingJobs += $job
+            $remainingJobs += $jobItem
         }
     }
 
     $runningJobs = $remainingJobs
-    $afterCount = $runningJobs.Count
-
-    Write-Host "Batch cleanup: Removed $removedCount | Remaining running jobs: $afterCount (was $beforeCount)" -ForegroundColor DarkGray
-    Start-Sleep -Milliseconds $delayMs
 }
 
 # ===============================
-# FINAL DRAIN (STREAMING)
+# FINAL DRAIN
 # ===============================
-Write-Host "`n========================================" -ForegroundColor DarkGray
-Write-Host "Final drain started. Remaining jobs: $($runningJobs.Count)" -ForegroundColor Cyan
+$runningJobs = Drain-AllJobs -Jobs $runningJobs
 
-$totalJobs = $runningJobs.Count
-$removedTotal = 0
-
-while ($runningJobs.Count -gt 0) {
-
-    $remainingJobs = @()
-    $removedThisRound = 0
-
-    foreach ($job in $runningJobs) {
-
-        $state = $job.State
-
-        if ($state -in @("Completed", "Failed", "Stopped")) {
-
-            try {
-                $output = Receive-Job $job -ErrorAction SilentlyContinue
-
-                foreach ($line in $output) {
-                    if ($line -match "429") {
-                        Write-Host $line -ForegroundColor Red
-                    }
-                    elseif ($line -match "200") {
-                        Write-Host $line -ForegroundColor Green
-                    }
-                    else {
-                        Write-Host $line -ForegroundColor Magenta
-                    }
-                }
-            }
-            catch {}
-
-            try { Remove-Job $job -Force -ErrorAction SilentlyContinue } catch {}
-
-            $removedThisRound++
-            $removedTotal++
-        }
-        else {
-            $remainingJobs += $job
-        }
-    }
-
-    $runningJobs = $remainingJobs
-
-    Write-Host "Drain progress: Removed $removedTotal / $totalJobs | Remaining: $($runningJobs.Count)" -ForegroundColor DarkGray
-
-    if ($runningJobs.Count -gt 0) {
-        Start-Sleep -Seconds 3
-    }
-}
-
-Write-Host "Final drain completed. All jobs processed." -ForegroundColor Green
-
-# ===============================
-# REPORT
-# ===============================
 $endDate = Get-Date
 $duration = $endDate - $startTime
 
-Write-Host "`nTest Completed in: $($duration.ToString()), at $($endDate.ToString())" -ForegroundColor Cyan
+Write-Host "Rate Limit Metrics Completed in: $($duration.ToString()), at $endDate" -ForegroundColor Cyan

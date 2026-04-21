@@ -5,7 +5,8 @@ on:
     branches: [ advance ] # Add other branches you want to deploy reports for
     paths-ignore:
       - 'README.md'
-      - '*.md'    
+      - '*.md'
+      - 'scripts/**' 
   pull_request:
     branches: [ advance ] # Match the branches from the push trigger
     paths-ignore:

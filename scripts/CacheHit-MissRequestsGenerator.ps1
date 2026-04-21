@@ -1,91 +1,133 @@
 . "$PSScriptRoot\JobUtils.ps1"
-# Cache lifecycle simulation (MISS → HIT → EVICTION → MISS)
-$startTime = Get-Date
 
-$scriptName = Split-Path -Leaf $MyInvocation.MyCommand.Path
-Write-Host "Running Script: $scriptName, started at $($startTime.ToString())"
+$startTime = Get-Date
+Write-Host "Starting cache + rate-limit aware load test..."
+
+# =========================
+# CONFIG
+# =========================
+$windowSeconds = 10
+$permitLimit = 15
+
+$targetPerWindow = 13          # stay under limiter
+$durationSeconds = 385         # ~500 requests total
+
+$maxConcurrency = 30
+
+# Burst config (controlled realism)
+$burstChance = 0.12            # 12% chance
+$burstMin = 2
+$burstMax = 4
 
 $url = "https://samwin-umlaut-converter-api.onrender.com/QueryGenerator/GetQuery?useCache"
 
 $inputs = @(
-    "schwaerzwaelder", "huettenbaecker", "straessle", "fuessener",
-    "knoepflemacher", "gruenwaelder", "roehrlbaecker", "schoenbaer",
-    "suessmilch", "uebelhoer", "faehrbaeker", "loewenbraeu",
-    "knoedlbuegel", "spaetbloeher", "muehlstueck"
+    "schwaerzwaelder","huettenbaecker","straessle","fuessener",
+    "knoepflemacher","gruenwaelder","roehrlbaecker","schoenbaer",
+    "suessmilch","uebelhoer","faehrbaeker","loewenbraeu",
+    "knoedlbuegel","spaetbloeher","muehlstueck"
 )
 
-$cacheEvictionDurationInSeconds = 60
 $query = ($inputs | ForEach-Object { "input=$_" }) -join "&"
 $fullUrl = "$url&$query"
 
-Write-Host "Starting cache lifecycle simulation..."
+# =========================
+# TIMING CONTROL
+# =========================
+$intervalMs = [math]::Floor(($windowSeconds * 1000) / $targetPerWindow)
 
-# GLOBAL JOB LIST (across cycles)
+$nextTick = Get-Date
+$endTime = $startTime.AddSeconds($durationSeconds)
+
 $runningJobs = @()
 
-for ($cycle = 1; $cycle -le 5; $cycle++) {
+# =========================
+# MAIN LOOP
+# =========================
+while ((Get-Date) -lt $endTime) {
 
-    Write-Host "`nCycle $cycle - dispatching requests"
+    # -------------------------
+    # CONCURRENCY CONTROL
+    # -------------------------
+    while ($runningJobs.Count -ge $maxConcurrency) {
+        $runningJobs = Cleanup-CompletedJobs -Jobs $runningJobs -Label "Throttle cleanup"
+        Start-Sleep -Milliseconds 50
+    }
 
-    $batchSize = 15
-    $rateLimiterDelaySec = 10
+    # -------------------------
+    # BASE REQUEST (steady flow)
+    # -------------------------
+    $job = Start-Job -ScriptBlock {
+        param($u)
 
-    $totalRequests = 100
-    $sent = 0
+        Start-Sleep -Milliseconds (Get-Random -Minimum 30 -Maximum 120)
 
-    while ($sent -lt $totalRequests) {
+        try {
+            Invoke-WebRequest -Uri $u -Method Get -UseBasicParsing -TimeoutSec 300 | Out-Null
+        }
+        catch {}
+        finally {
+            $error.Clear()
+        }
 
-        Write-Host "Dispatching batch starting at $sent" -ForegroundColor Cyan
+    } -ArgumentList $fullUrl
 
-        1..$batchSize | ForEach-Object {
+    $runningJobs += $job
 
-            if ($sent -ge $totalRequests) { return }
+    # -------------------------
+    # OPTIONAL BURST (controlled)
+    # -------------------------
+    if ((Get-Random -Minimum 1 -Maximum 101) -le ($burstChance * 100)) {
 
-            $job = Start-Job -ScriptBlock {
+        $burstSize = Get-Random -Minimum $burstMin -Maximum ($burstMax + 1)
+
+        Write-Host "Burst triggered: $burstSize requests" -ForegroundColor Magenta
+
+        1..$burstSize | ForEach-Object {
+
+            Start-Sleep -Milliseconds (Get-Random -Minimum 30 -Maximum 100)
+
+            $burstJob = Start-Job -ScriptBlock {
                 param($u)
+
                 try {
                     Invoke-WebRequest -Uri $u -Method Get -UseBasicParsing -TimeoutSec 300 | Out-Null
                 }
                 catch {}
                 finally {
                     $error.Clear()
-                    Start-Sleep -Milliseconds 100
                 }
+
             } -ArgumentList $fullUrl
 
-            $runningJobs += $job
-            $sent++
+            $runningJobs += $burstJob
         }
-
-        Write-Host "Batch dispatched." -ForegroundColor Yellow
-
-        # --- SOFT CLEANUP (ONLY COMPLETED JOBS) ---
-        $runningJobs = Cleanup-CompletedJobs -Jobs $runningJobs -Label "Batch cleanup"
-
-        Write-Host "Waiting $rateLimiterDelaySec sec..."
-
-        Start-Sleep -Seconds $rateLimiterDelaySec
     }
 
-    Write-Host "Cycle $cycle - requests dispatched"
+    # -------------------------
+    # RATE-CONTROLLED SCHEDULING (no drift + mild jitter)
+    # -------------------------
+    $nextTick = $nextTick.AddMilliseconds($intervalMs)
 
-    # --- END OF CYCLE CLEANUP (ONLY COMPLETED, NO WAIT) ---
-    $runningJobs = Cleanup-CompletedJobs -Jobs $runningJobs -Label "Cycle cleanup"
+    $sleepMs = ($nextTick - (Get-Date)).TotalMilliseconds
 
-    if ($cycle -lt 5) {
-        Write-Host "Waiting $cacheEvictionDurationInSeconds seconds for cache eviction..."
-        Start-Sleep -Seconds $cacheEvictionDurationInSeconds
-    }
+    # jitter for realism (bounded)
+    $jitter = Get-Random -Minimum -120 -Maximum 180
+    $sleepMs = [math]::Max(0, $sleepMs + $jitter)
+
+    Start-Sleep -Milliseconds $sleepMs
+
+    # -------------------------
+    # CLEANUP
+    # -------------------------
+    $runningJobs = Cleanup-CompletedJobs -Jobs $runningJobs -Label "Loop cleanup"
 }
 
 # =========================
-# FINAL DRAIN (ONLY HERE)
+# FINAL DRAIN
 # =========================
 $runningJobs = Drain-AllJobs -Jobs $runningJobs
 
-$runningJobs = @()
-
-$endDate = Get-Date
-$duration = $endDate - $startTime
-
-Write-Host "Simulation completed in: $($duration.ToString()), at $($endDate.ToString())"
+$endTime = Get-Date
+Write-Host "Completed at: $endTime"
+Write-Host "Total duration: $($endTime - $startTime)"

@@ -44,7 +44,7 @@ function Cleanup-CompletedJobs {
         return @()
     }
 
-    Write-Host "`nFinal drain started. Total jobs: $($Jobs.Count)" -ForegroundColor Cyan
+    Write-Host "Final drain started. Total jobs: $($Jobs.Count)" -ForegroundColor Cyan
 
     $remainingJobs = $Jobs
     $total = $Jobs.Count
